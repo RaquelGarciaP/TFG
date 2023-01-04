@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 
 class DopplerShift_and_Convolution:
 
-    def __init__(self, T_eff: int, log_g: float):
+    def __init__(self, T_eff, log_g):
 
         self.__T_eff = T_eff
         self.__log_g = log_g
@@ -17,9 +17,7 @@ class DopplerShift_and_Convolution:
 
         # we read the file using the library pandas
         print('Reading the file')
-        self.__read_initial_spectral_line = pd.read_csv(self.__initial_spectral_line, skiprows=358333, nrows=500000)  # , skiprows=941484, nrows=3000)
-                                                        # skiprows = row number where we start counting (0 index)
-                                                        # nrows = number of rows we want to read
+        self.__read_initial_spectral_line = pd.read_csv(self.__initial_spectral_line)
 
         # we obtain the number of rows of our data (number of data we have per column); useful for iterations
         self.__number_rows = len(self.__read_initial_spectral_line)
