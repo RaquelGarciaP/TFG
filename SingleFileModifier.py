@@ -5,15 +5,15 @@ import math
 import matplotlib.pyplot as plt
 
 
-class FileReader:
+class SingleFileModifier:
 
-    def __init__(self, T_eff, log_g):
+    def __init__(self, temperature, log_g):
 
-        self.__T_eff = T_eff
+        self.__temperature = temperature
         self.__log_g = log_g
 
         # file that we want to read:
-        self.__file_name = 'file_' + str(self.__T_eff) + '_' + str(self.__log_g) + '.csv'
+        self.__file_name = 'file_' + str(self.__temperature) + '_' + str(self.__log_g) + '.csv'
 
         # we read the file using the library pandas
         print('Reading the file')
@@ -35,7 +35,7 @@ class FileReader:
         for i in range(self.__number_rows):
             self.__wave_length[i] = (1 + float(radial_vel) / float(c)) * self.__wave_length[i]
 
-    def convolution(self, sigma):
+    def convolution(self, sigma, plot=True):
         print('Applying Convolution')
         # we create a copy of the flux array (called initial_data bc it's the data b4 this modification):
         initial_data = self.__flux
@@ -55,7 +55,8 @@ class FileReader:
         # we convolve the initial flux with the normalized gaussian
         self.__flux = sp.signal.fftconvolve(initial_data, gaussian, mode="same")
 
-        def plot():
+        # if plot == True:
+        if plot:
             # plot (to check the data):
             fig, ax = plt.subplots()
 
@@ -67,6 +68,10 @@ class FileReader:
             ax.set_ylabel('flux')
             ax.set_title('convolution')
             plt.show()
+
+        # if plot == False: (correct way to express it -> if not plot:)
+        else:
+            pass
 
     def do_plot(self):
         # basic plot (to check the data):
@@ -82,5 +87,5 @@ class FileReader:
         data_frame = pd.DataFrame(final_data, columns=['wave_length', 'flux'])
 
         # save the data frame into a .csv file:
-        data_frame.to_csv('file'+str(self.__T_eff)+'_'+str(self.__log_g)+'_modified.csv', index=False)
+        data_frame.to_csv('file' + str(self.__temperature) + '_' + str(self.__log_g) + '_modified.csv', index=False)
 

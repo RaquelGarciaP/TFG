@@ -12,8 +12,6 @@ class FileValueFilter:
 
     def apply_filter(self, rang_value1, rang_value2):
 
-        # filtered_df = self.data_frame.query()
-
         # create a boolean mask to choose the rows with the desired value
         mask = (self.__data_frame['wl'] >= rang_value1) & (self.__data_frame['wl'] <= rang_value2)
 
