@@ -23,27 +23,27 @@ class MultipleFileModifier:
 
         # save the initial data in the class variables for the wl and flux (will be MODIFIED)
         print('Saving the data in the class variables')
-        self.__wl1 = self.__df_T1['wl']
+        # we save the wl of the first file as the new 'x' axis
+        self.__wl = self.__df_T1['wl']
+        # the flux os the 1st file remains ct because has the same 'x'
         self.__flux1 = self.__df_T1['flux']
-        self.__wl2 = self.__df_T2['wl']
-        self.__flux2 = self.__df_T2['flux']
+        # we initialize the class variable of the flux of the 2nd file. In this we'll save the data after
+        # the interpolation (the 'x' axis changes -> interpolation to find the corresponding values for the new 'x')
+        self.__flux2 = None
 
-    def interpolate(self):
-        # wl1 is the new axis for the wave length in both files
-        # find in between which indices are the wl1 values with respect to wl2
-        indices_left = np.searchsorted(self.__wl2, self.__wl1)
-        indices_right = [x - 1 for x in indices_left]
+        # we create the class variable that will contain the flux after the sum of both files
+        self.__combined_flux = None
 
-        # copy of the array flux2
-        initial_flux2 = self.__flux2
+    def interpolate(self):  # todo: potser aixo es pot fer al inicialitzar la classe directament
+        # we do the interpolation and obtain the values for flux2 in the new axis of 'x'
+        # (documentació de numpy explica que passa als extrems)
+        self.__flux2 = np.interp(self.__wl, self.__df_T2['wl'], self.__df_T2['flux'])
 
-        # define a function for the linear interpolation
-        def linear_interpolation(x, x0, y0, x1, y1):
-            return y0 + (y1 - y0) * (x - x0) / (x1 - x0)
+    def sum(self):
+        # we sum point to point each value of both fluxes using the 'map' function and converting the result to
+        # a pandas 'Series' (easier to work with using the library pandas)
+        self.__combined_flux = pd.Series(map(lambda x, y: x + y, self.__flux1, self.__flux2))
 
-        # loop to apply the linear interpolation to each element of flux2
-        for i in range(self.__nrows_T1 - 2):
-            self.__flux2 = linear_interpolation(self.__flux1[i+1], self.__wl2[indices_left[i]], initial_flux2[i], ...)  # ESTA MAL?
 
 
 
