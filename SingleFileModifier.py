@@ -7,13 +7,12 @@ import matplotlib.pyplot as plt
 
 class SingleFileModifier:
 
-    def __init__(self, temperature, log_g):
+    def __init__(self, temperature):
 
         self.__temperature = temperature
-        self.__log_g = log_g
 
         # file that we want to read:
-        self.__file_name = 'file_' + str(self.__temperature) + '_' + str(self.__log_g) + '.csv'
+        self.__file_name = 'file_' + str(self.__temperature) + '.csv'
 
         # we read the file using the library pandas
         print('Reading the file')
@@ -35,7 +34,7 @@ class SingleFileModifier:
         for i in range(self.__number_rows):
             self.__wave_length[i] = (1 + float(radial_vel) / float(c)) * self.__wave_length[i]
 
-    def convolution(self, sigma, plot=True):
+    def convolution(self, sigma, plot=False):
         print('Applying Convolution')
         # we create a copy of the flux array (called initial_data bc it's the data b4 this modification):
         initial_data = self.__flux
@@ -57,6 +56,7 @@ class SingleFileModifier:
 
         # if plot == True:
         if plot:
+            print('Generating convolution plot')
             # plot (to check the data):
             fig, ax = plt.subplots()
 
@@ -87,5 +87,5 @@ class SingleFileModifier:
         data_frame = pd.DataFrame(final_data, columns=['wave_length', 'flux'])
 
         # save the data frame into a .csv file:
-        data_frame.to_csv('file' + str(self.__temperature) + '_' + str(self.__log_g) + '_modified.csv', index=False)
+        data_frame.to_csv('file' + str(self.__temperature) + '_modified.csv', index=False)
 

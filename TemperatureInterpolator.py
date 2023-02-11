@@ -4,9 +4,8 @@ import pandas as pd
 
 class TemperatureInterpolator:
 
-    def __init__(self, temperature, log_g):
+    def __init__(self, temperature):
         self.__temperature = temperature
-        self.__log_g = log_g
 
         self.__val = float(self.__temperature) / 100.0
         floor = math.floor(self.__val)
@@ -15,7 +14,7 @@ class TemperatureInterpolator:
         # if the introduced temperature is equal to the top or the floor, we choose an already existing file
         if (self.__val == floor) or (self.__val == ceil):
 
-            self.__file_name = 'file_' + str(self.__temperature) + '_' + str(self.__log_g) + '.csv'
+            self.__file_name = 'file_' + str(self.__temperature) + '.csv'
 
             # we read the file using the library pandas
             print('Reading the file')
@@ -25,8 +24,8 @@ class TemperatureInterpolator:
         else:
             T1 = int(floor*100)
             T2 = int(ceil*100)
-            self.__file_name_T1 = 'file_' + str(T1) + '_' + str(self.__log_g) + '.csv'
-            self.__file_name_T2 = 'file_' + str(T2) + '_' + str(self.__log_g) + '.csv'
+            self.__file_name_T1 = 'file_' + str(T1) + '.csv'
+            self.__file_name_T2 = 'file_' + str(T2) + '.csv'
 
             self.__data_T1 = pd.read_csv(self.__file_name_T1, names=['wl', 'flux'])
             self.__data_T2 = pd.read_csv(self.__file_name_T2, names=['wl', 'flux'])

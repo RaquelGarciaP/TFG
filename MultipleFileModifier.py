@@ -9,13 +9,13 @@ class MultipleFileModifier:
         self.__T2 = T2
 
         # files that we want to read:
-        self.__file_name_T1 = 'file_' + str(self.__T1) + '_' + str(self.__log_g) + '.csv'
-        self.__file_name_T2 = 'file_' + str(self.__T2) + '_' + str(self.__log_g) + '.csv'
+        self.__file_name_T1 = 'file_' + str(self.__T1) + '.csv'
+        self.__file_name_T2 = 'file_' + str(self.__T2) + '.csv'
 
         # we read the file using the library pandas
         print('Reading the files')
-        self.__df_T1 = pd.read_csv(self.__file_name_T1, names=['wl', 'flux'])
-        self.__df_T2 = pd.read_csv(self.__file_name_T2, names=['wl', 'flux'])
+        self.__df_T1 = pd.read_csv(self.__file_name_T1)
+        self.__df_T2 = pd.read_csv(self.__file_name_T2)
 
         # we obtain the number of rows of our data (number of data we have per column); useful for iterations
         self.__nrows_T1 = len(self.__df_T1)
