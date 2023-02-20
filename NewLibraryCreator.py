@@ -55,17 +55,17 @@ class NewLibraryCreator:
             l1, = ax.plot(self.__initial_df['wl'], initial_data)
             l2, = ax.plot(self.__initial_df['wl'], self.__initial_df['flux'])
 
-            ax.legend((l1, l2), ('initial flux', 'final flux'), loc='upper right', shadow=False)
-            ax.set_xlabel('wl')
-            ax.set_ylabel('flux')
-            ax.set_title('convolution')
+            ax.legend((l1, l2), ('Initial flux', 'Final flux'), loc='upper right', shadow=False)
+            ax.set_xlabel('Wavelength (A)')
+            ax.set_ylabel('Flux')
+            ax.set_title('Convolution check')
             plt.show()
 
         # if plot == False: (correct way to express it -> if not plot:)
         else:
             pass
 
-    def rebinning(self):
+    def rebinning(self, plot_check=False, integral_check=False):
         print('Applying Rebinning')
 
         # create a collection that will contain the positions of the PHOENIX wl in the standard wl array (with CARMENES
@@ -91,15 +91,23 @@ class NewLibraryCreator:
         # sampling of the PHOENIX library
         delta_wl_phoenix = 0.01  # in A, [A]=Angstrom
 
-        # create a variable that will contain the sum of the flux (used to verify flux conservation)
-        sum_flux = 0.0
         # create a collection that will contain the flux in the new standard wl (after rebinning)
         flux = collections.deque()
 
+        # create a collection that will contain the delta_wl of each standard wl
+        delta_wl_standard = collections.deque()
+
         for i in range(len(self.__standard_df)):
+            # create a variable that will contain the sum of the flux_i (used to verify flux conservation)
+            sum_flux = 0.0
+
             # point of interest: i
             wl_i = self.__standard_df['wl'].iloc[i]
             delta_wli = wl_i / (resol * R)
+
+            # add each delta to the created collection (this is necessary for the flux conservation check!)
+            delta_wl_standard.append(delta_wli)
+
             # wl near to the point of interest
             compatible_wl = self.__initial_df.loc[(self.__initial_df['pos'] == i) | (self.__initial_df['pos'] == i + 1)]
 
@@ -116,7 +124,8 @@ class NewLibraryCreator:
                     alpha = 1.0
 
                 # if the distance value is in between both intervals
-                elif (d <= delta_wli / 2.0 + delta_wl_phoenix / 2.0) & (d >= delta_wli / 2.0 - delta_wl_phoenix / 2.0):
+                # (d <= delta_wli / 2.0 + delta_wl_phoenix / 2.0) & (d >= delta_wli / 2.0 - delta_wl_phoenix / 2.0)
+                else:
                     alpha = (delta_wli / 2.0 + delta_wl_phoenix / 2.0 - d) / delta_wl_phoenix
 
                 # sum of the flux that each point provides based on the previous conditions
@@ -133,11 +142,43 @@ class NewLibraryCreator:
         # add the flux into de data frame with the standard wl as a new column
         self.__standard_df['flux'] = lst_final_flux
 
-        # check is the flux is conserved
-        initial_flux = sum(self.__initial_df['flux'])
-        final_flux = sum(self.__standard_df['flux'])
+        # first check of the flux conservation
+        # if plot_check == True:
+        if plot_check:
+            print('Generating flux plot')
+            # plot (to check the data):
+            fig, ax = plt.subplots()
 
-        print(initial_flux, final_flux)
+            l1, = ax.plot(self.__initial_df['wl'], self.__initial_df['flux'])
+            l2, = ax.plot(self.__standard_df['wl'], self.__standard_df['flux'])
+
+            ax.legend((l1, l2), ('Initial flux', 'Final flux'), loc='upper right', shadow=False)
+            ax.set_xlabel('Wavelength (A)')
+            ax.set_ylabel('Flux')
+            ax.set_title('Rebinning plot check')
+            plt.show()
+
+        # if plot_check == False: (correct way to express it -> if not plot_check:)
+        else:
+            pass
+
+        if integral_check:
+            integral_i = 0.0
+            integral_f = 0.0
+
+            for i in range(len(self.__initial_df)):
+                integral_i += delta_wl_phoenix * self.__initial_df['flux'].iloc[i]
+
+            for i in range(len(self.__standard_df)):
+                integral_f += delta_wl_standard[i] * self.__standard_df['flux'].iloc[i]
+
+            diff = abs(integral_i - integral_f)
+            print('Integral initial state: ', integral_i)
+            print('Integral final state: ', integral_f)
+            print('Difference: ', diff)
+
+        else:
+            pass
 
     def save_to_file(self):
         print('Saving to file in the NewLibrary folder')
