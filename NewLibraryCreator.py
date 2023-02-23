@@ -26,20 +26,29 @@ class NewLibraryCreator:
         # self.__filtered_df = self.__data_frame.loc[mask, :]
         self.__initial_df = self.__initial_df[mask]
 
-    def instrumental_convolution(self, sigma, plot=False):
+    def instrumental_convolution(self, check_plot=False):
         print('Applying Instrumental Convolution')
         # we create a copy of the flux array (called initial_data bc it's the data b4 this modification):
-        initial_data = self.__initial_df['flux']
+        initial_data = self.__initial_df['flux'].copy()
 
         # we center the gaussian in the middle of the wave length axis:
         min_wl = self.__initial_df['wl'].iloc[0]  # minimum wave length
         max_wl = self.__initial_df['wl'].iloc[-1]  # maximum wave length
         mu = min_wl + (max_wl - min_wl) / float(2)  # mu = center of the gaussian
 
-        # (implicit loop to) calculate the gaussian:
-        gaussian = np.exp(-((self.__initial_df['wl'] - mu) / float(sigma)) ** 2 / float(2))
+        R = 94600.0
+        ct = 1.0 / (2.35482 * R)  # delta_lambda = lambda/R = FWHM = 2*sqrt(2*ln2)*sigma = 2.35482 * sigma
+        sigma = ct * self.__initial_df['wl']
 
-        # we calculate the area of the gaussian and use it to obtain a normalized gaussian (dividing it with the area):
+        gauss = collections.deque()
+
+        # loop to calculate the gaussian:
+        for i in range(len(self.__initial_df)):
+            gauss.append(np.exp(-((self.__initial_df['wl'].iloc[i] - mu) / float(sigma.iloc[i])) ** 2 / float(2)))
+
+        gaussian = list(gauss)
+
+        # we calculate the area of the gaussian and use it to obtain a normalized gaussian (dividing by the area):
         gaussian_area = sum(gaussian)
         gaussian = [x / gaussian_area for x in gaussian]  # normalized gaussian
 
@@ -47,7 +56,7 @@ class NewLibraryCreator:
         self.__initial_df['flux'] = sp.signal.fftconvolve(initial_data, gaussian, mode="same")
 
         # if plot == True:
-        if plot:
+        if check_plot:
             print('Generating convolution plot')
             # plot (to check the data):
             fig, ax = plt.subplots()
@@ -72,6 +81,7 @@ class NewLibraryCreator:
         # parameters), i.e., position of PHOENIX wl in between two standard wl
         df_positions = collections.deque()
 
+        print('Searching the positions of the elements of the old array in the new wl array')
         # loop to obtain the positions of the wl
         for i in range(len(self.__initial_df)):
             # search the position of each element of the PHOENIX wl
@@ -85,8 +95,8 @@ class NewLibraryCreator:
         self.__initial_df['pos'] = lst
 
         # CARMENES sampling parameters
-        R = 94600  # resolution power
-        resol = 2.3  # ??
+        R = 94600.0  # resolution power
+        resol = 2.8  # pixels per resolution element
 
         # sampling of the PHOENIX library
         delta_wl_phoenix = 0.01  # in A, [A]=Angstrom
@@ -97,6 +107,7 @@ class NewLibraryCreator:
         # create a collection that will contain the delta_wl of each standard wl
         delta_wl_standard = collections.deque()
 
+        print('Calculating the flux in the new wl array')
         for i in range(len(self.__standard_df)):
             # create a variable that will contain the sum of the flux_i (used to verify flux conservation)
             sum_flux = 0.0
@@ -130,7 +141,6 @@ class NewLibraryCreator:
 
                 # sum of the flux that each point provides based on the previous conditions
                 sum_flux += alpha * delta_wl_phoenix * compatible_wl['flux'].iloc[j]
-                print(wl_i, compatible_wl['wl'].iloc[j], d, delta_wli, alpha)
 
             # flux corresponding to each standard wl_i
             flux_i = sum_flux / delta_wli
@@ -175,7 +185,7 @@ class NewLibraryCreator:
             diff = abs(integral_i - integral_f)
             print('Integral initial state: ', integral_i)
             print('Integral final state: ', integral_f)
-            print('Difference: ', diff)
+            print('Difference: ', diff, '   Difference / initial flux: ', diff / integral_i)
 
         else:
             pass
