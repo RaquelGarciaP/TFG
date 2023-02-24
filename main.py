@@ -13,7 +13,7 @@ test.instrumental_convolution()
 test.rebinning(integral_check=True)
 test.save_to_file()'''
 
-c = 299792458.0
+'''c = 299792458.0
 
 T1, T2 = 2345, 2379
 R21 = 2
@@ -24,7 +24,7 @@ v_rot1, v_rot2 = 47.23, 25.9
 combination = sc(T1, T2, R21, L21, v_r1, v_r2, v_rot1, v_rot2)
 # combination.sum_spectra()
 # combination.plot()
-# combination.save_to_file()
+# combination.save_to_file()'''
 
 
 
