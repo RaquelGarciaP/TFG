@@ -22,8 +22,8 @@ class SingleFileModifier:
         # copy the standard wl into de final data frame as the wl ('x' axis)
         self.df['wl'] = self.__standard_wl['wl'].copy()
 
-        self.__temperature_interpolator(integral_check=True, plot_check=True)
-        self.__doppler_shift(integral_check=True, plot_check=True)
+        self.__temperature_interpolator()
+        self.__doppler_shift()
         self.__doppler_broadening(integral_check=True, plot_check=True)
 
     def __temperature_interpolator(self, integral_check=False, plot_check=False):
@@ -32,7 +32,6 @@ class SingleFileModifier:
         val = float(self.__temperature) / 100.0
         floor = math.floor(val)
         ceil = math.ceil(val)
-        print(floor, ceil)
 
         # temperatures corresponding to library files
         if self.__temperature <= 7000.0:
@@ -49,8 +48,6 @@ class SingleFileModifier:
                 ceil = ceil
             else:
                 ceil = ceil + 1
-
-            print(floor, ceil)
 
             t1 = int(floor * 100)
             t2 = int(ceil * 100)
@@ -84,11 +81,11 @@ class SingleFileModifier:
             for i in range(len(self.df)):
                 integral_f += self.__standard_wl['wl'].iloc[i] * self.df['flux'].iloc[i]
 
-            sum_flux = integral_1 + integral_2
-            diff = abs(sum_flux - integral_f)
-            print(' Sum of fluxes for T1 and T2 (before interpolation): ', sum_flux)
+            interpol_integral_flux = integral_1 + (integral_2 - integral_1) * interpolator
+            diff = abs(interpol_integral_flux - integral_f)
+            print(' Sum of fluxes for T1 and T2 (before interpolation): ', interpol_integral_flux)
             print(' Flux integral of the desired T (after interpolation): ', integral_f)
-            print(' Difference: ', diff, '   Difference / initial flux: ', diff / sum_flux)
+            print(' Difference: ', diff, '   Difference / initial flux: ', diff / interpol_integral_flux)
 
         else:
             pass
@@ -114,13 +111,13 @@ class SingleFileModifier:
 
     def __doppler_shift(self, integral_check=False, plot_check=False):
         print('Applying Doppler Shift')
-        c = 299792458  # light velocity (m/s)
+        c = 299792458.0  # light velocity (m/s)
 
         # we save the data before the Doppler shift (we only do this to do the check_plot)
         initial_data = self.df.copy()
 
         # Doppler shift
-        self.df['wl'] = (1.0 + float(self.__radial_vel) / float(c)) * initial_data['wl']
+        self.df['wl'] = (1.0 + float(self.__radial_vel) / c) * initial_data['wl']
 
         # now we want to re-express the flux in the standardized wl
         print('Re-Standardizing the wavelength after Doppler shift')
@@ -180,8 +177,8 @@ class SingleFileModifier:
         mu = min_wl + (max_wl - min_wl) / 2.0  # mu = center of the gaussian
 
         # v sini = FWHM = 2*sqrt(2*ln2)*sigma = 2.35482 * sigma (in wl units: v sini * wl / c = FWHM)
-        c = 299792458  # light velocity (m/s)
-        ct = self.__vel_rotation / (2.35482 * float(c))
+        c = 299792458.0  # light velocity (m/s)
+        ct = self.__vel_rotation / (2.35482 * c)
         sigma = ct * self.df['wl']
 
         gauss = collections.deque()
@@ -197,6 +194,8 @@ class SingleFileModifier:
         # and doing the sum of all of them gives the approximated integral)
         for i in range(len(gaussian)):
             gaussian[i] = gaussian[i] * self.__standard_wl['delta wl'].iloc[i]
+        # gaussian = gaussian * self.__standard_wl['delta wl']
+        # gaussian = [x * 0.01 for x in gaussian]
 
         # we convolve the initial flux with the normalized gaussian
         self.df['flux'] = sp.signal.fftconvolve(initial_data, gaussian, mode="same")
