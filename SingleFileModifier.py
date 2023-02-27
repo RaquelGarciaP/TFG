@@ -176,6 +176,8 @@ class SingleFileModifier:
         max_wl = self.df['wl'].iloc[-1]  # maximum wave length
         mu = min_wl + (max_wl - min_wl) / 2.0  # mu = center of the gaussian
 
+        print('min and max: ', min_wl, max_wl)
+
         # v sini = FWHM = 2*sqrt(2*ln2)*sigma = 2.35482 * sigma (in wl units: v sini * wl / c = FWHM)
         c = 299792458.0  # light velocity (m/s)
         ct = self.__vel_rotation / (2.35482 * c)
@@ -192,10 +194,18 @@ class SingleFileModifier:
         # multiply each element of the normalized gaussian array by delta_wl_i (we do that because when we
         # calculate the convolution (an integral) we need use the trapezium method: multiplying each 'y' by its delta_x
         # and doing the sum of all of them gives the approximated integral)
-        for i in range(len(gaussian)):
-            gaussian[i] = gaussian[i] * self.__standard_wl['delta wl'].iloc[i]
-        # gaussian = gaussian * self.__standard_wl['delta wl']
+        '''for i in range(len(gaussian)):
+            gaussian[i] = gaussian[i] * self.__standard_wl['delta wl'].iloc[i]'''
+        gaussian = gaussian * self.__standard_wl['delta wl']
         # gaussian = [x * 0.01 for x in gaussian]
+        plt.plot(self.df['wl'], gaussian)
+        plt.show()
+
+        integral_gauss = 0.0
+        for i in range(len(gaussian)):
+            integral_gauss += gaussian[i] * self.__standard_wl['delta wl'].iloc[i]
+
+        print('gaussian integral', integral_gauss)
 
         # we convolve the initial flux with the normalized gaussian
         self.df['flux'] = sp.signal.fftconvolve(initial_data, gaussian, mode="same")
