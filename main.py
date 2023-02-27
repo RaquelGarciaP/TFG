@@ -17,7 +17,7 @@ T1, T2 = 11974.26, 2379
 R21 = 2
 L21 = 2
 v_r1, v_r2 = 105.2, 11056.0
-v_rot1, v_rot2 = 207.23, 25.9
+v_rot1, v_rot2 = 29978.23, 25.9
 
 combination = sc(T1, T2, R21, L21, v_r1, v_r2, v_rot1, v_rot2)
 # combination.sum_spectra()
