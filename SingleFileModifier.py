@@ -22,9 +22,9 @@ class SingleFileModifier:
         # copy the standard wl into de final data frame as the wl ('x' axis)
         self.df['wl'] = self.__standard_wl['wl'].copy()
 
-        self.__temperature_interpolator()
-        self.__doppler_shift()
-        self.__doppler_broadening(integral_check=True, plot_check=True)
+        self.__temperature_interpolator(integral_check=True)
+        self.__doppler_shift(integral_check=True)
+        self.__doppler_broadening(integral_check=True)
 
     def __temperature_interpolator(self, integral_check=False, plot_check=False):
         print('Interpolation of Temperatures')
@@ -172,15 +172,15 @@ class SingleFileModifier:
         initial_data = self.df['flux'].copy()
 
         # we center the gaussian in the middle of the wave length axis:
-        min_wl = self.df['wl'].iloc[0]  # minimum wave length
-        max_wl = self.df['wl'].iloc[-1]  # maximum wave length
-        mu = min_wl + (max_wl - min_wl) / 2.0  # mu = center of the gaussian
+        # min_wl = self.df['wl'].iloc[0]  # minimum wave length
+        # max_wl = self.df['wl'].iloc[-1]  # maximum wave length
+        middle = self.df['wl'].iloc[81200]  # wave length in the center of the wl array (81200 middle position)
+        mu = middle  # min_wl + (max_wl - min_wl) / 2.0  # mu = center of the gaussian
 
         # v sini = FWHM = 2*sqrt(2*ln2)*sigma = 2.35482 * sigma (in wl units: v sini * wl / c = FWHM)
         c = 299792458.0  # light velocity (m/s)
         ct = self.__vel_rotation / (2.35482 * c)
         sigma = ct * self.df['wl']
-        print('constant: ', ct)
 
         gauss = collections.deque()
 
@@ -193,13 +193,9 @@ class SingleFileModifier:
         # multiply each element of the normalized gaussian array by delta_wl_i (we do that because when we
         # calculate the convolution (an integral) we need use the trapezium method: multiplying each 'y' by its delta_x
         # and doing the sum of all of them gives the approximated integral)
-        for i in range(len(gaussian)):
-            gaussian[i] = gaussian[i] * self.__standard_wl['delta wl'].iloc[i]
-        # gaussian = gaussian * self.__standard_wl['delta wl']
-        # gaussian = [x * 0.01 for x in gaussian]
-
-        integral_gauss = sum(gaussian)
-        print('gaussian integral', integral_gauss)
+        '''for i in range(len(gaussian)):
+            gaussian[i] = gaussian[i] * self.__standard_wl['delta wl'].iloc[i]'''
+        gaussian = gaussian * self.__standard_wl['delta wl']
 
         # we convolve the initial flux with the normalized gaussian
         self.df['flux'] = sp.signal.fftconvolve(initial_data, gaussian, mode="same")

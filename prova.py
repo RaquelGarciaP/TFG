@@ -20,7 +20,10 @@ df = df[mask]'''
 
 min = df['wl'].iloc[0]
 max = df['wl'].iloc[-1]
-mu = min + (max - min) / 2.0
+position = len(df)/2
+print(len(df), position)
+middle = df['wl'].iloc[81200]
+mu = middle  # 7065.010522549267  # min + (max - min) / 2.0
 
 print(min, max)
 print(mu)
@@ -54,11 +57,12 @@ gauss_norm = list(gauss_norm)
     # gauss_norm[i] = gauss_norm[i] * delta_wl_phoenix
     gauss_norm[i] = gauss_norm[i] * standard_wl['delta wl'].iloc[i]'''
 
-funcio = np.arange(300,400)
+gaussian = [x * 10000000000000000 for x in gauss_norm]
+'''plt.plot(df['wl'], gaussian)
+plt.show()'''
 
-print(df)
 print('doing convolution')
-df['flux'] = sp.signal.fftconvolve(copia, funcio, mode='same')
+df['flux'] = sp.signal.fftconvolve(copia, gauss_norm, mode='same')
 print(df)
 
 print('checking integral')
@@ -83,8 +87,9 @@ fig, ax = plt.subplots()
 
 l1, = ax.plot(df['wl'], copia)
 l2, = ax.plot(df['wl'], df['flux'])
+l3, = ax.plot(df['wl'], gaussian)
 
-ax.legend((l1, l2), ('initial flux', 'convolution norm'), loc='upper right', shadow=False)
+ax.legend((l1, l2, l3), ('initial flux', 'convolution norm', 'gaussian'), loc='upper right', shadow=False)
 ax.set_xlabel('Wavelength (A)')
 ax.set_ylabel('Flux')
 ax.set_title('Convolution check')
