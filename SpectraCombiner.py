@@ -8,12 +8,12 @@ import SingleFileModifier as sfm
 
 class SpectraCombiner:
 
-    def __init__(self, T1, T2, R21, L21, v_r1, v_r2, v_rot1, v_rot2):
+    def __init__(self, T1, T2, R21, v_r1, v_r2, v_rot1, v_rot2):
         # save the introduced variables in class variables
         self.__T1 = T1  # temperature
         self.__T2 = T2
         self.__R21 = R21  # R2/R1 (radius of the stars)
-        self.__L21 = L21  # L2/L1 (luminosities of the stars)
+        # self.__L21 = L21  # L2/L1 (luminosities of the stars)
         # self.__inc = inc  # inclination of the orbital plane
         self.__v_r1 = v_r1  # radial velocity
         self.__v_r2 = v_r2
@@ -37,15 +37,6 @@ class SpectraCombiner:
     def sum_spectra(self, integral_check=False, plot_check=False):
         print('Combining both fluxes')
 
-        '''print('DataFrame 1: ', self.__df1['flux'].max(), self.__df1['flux'].min())
-        print('DataFrame 2: ', self.__df2['flux'].max(), self.__df2['flux'].min())
-        rest1 = self.__df1['flux'].max() - self.__df1['flux'].min()
-        rest2 = self.__df2['flux'].max() - self.__df2['flux'].min()
-        print(rest1, rest2)
-
-        plt.plot(self.__df1['wl'], self.__df1['flux'])
-        plt.plot(self.__df2['wl'], self.__df2['flux'])
-        plt.show()'''
         # the wl in the combined df will correspond to the standardized wl
         self.__combined_df['wl'] = self.__standard_wl['wl'].copy()
 
@@ -78,12 +69,24 @@ class SpectraCombiner:
 
         if plot_check:
             print('Generating temperature interpolation check plot')
+
+            # USE ONLY IF WE WANT TO PLOT A SMALL INTERVAL OF THE TOTAL DATA FRAME
+            '''mask = (self.__df1['wl'] >= 6340.0) & (self.__df1['wl'] <= 6380.0)
+            df1_copy = self.__df1[mask]
+            mask = (self.__df2['wl'] >= 6340.0) & (self.__df2['wl'] <= 6380.0)
+            df2_copy = self.__df2[mask]
+            mask = (self.__combined_df['wl'] >= 6340.0) & (self.__combined_df['wl'] <= 6380.0)
+            dfcomb_copy = self.__combined_df[mask]'''
+
             # plot (to check the data):
             fig, ax = plt.subplots()
 
             l1, = ax.plot(self.__df1['wl'], self.__df1['flux'])
             l2, = ax.plot(self.__df2['wl'], self.__R21**2 * self.__df2['flux'])
             l3, = ax.plot(self.__combined_df['wl'], self.__combined_df['flux'])
+            '''l1, = ax.plot(df1_copy['wl'], df1_copy['flux'])
+            l2, = ax.plot(df2_copy['wl'], self.__R21 ** 2 * df2_copy['flux'])
+            l3, = ax.plot(dfcomb_copy['wl'], dfcomb_copy['flux'])'''
 
             ax.legend((l1, l2, l3), ('T1', 'T2', 'Joined Spectra'), loc='upper right', shadow=False)
             ax.set_xlabel('Wavelength (A)')

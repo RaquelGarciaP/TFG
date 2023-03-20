@@ -14,14 +14,13 @@ test.rebinning(integral_check=True, plot_check=True)
 test.save_to_file()'''
 
 T1, T2 = 11804.26, 11567.39
-R21 = 2.0
-L21 = 2.0
-v_r1, v_r2 = 105.2, 116.7
-v_rot1, v_rot2 = 29978.23, 31006.39
+R21 = 2.67
+v_r1, v_r2 = 11530.2, 11680.7
+v_rot1, v_rot2 = 2997.23, 3100.39
 
-combination = sc(T1, T2, R21, L21, v_r1, v_r2, v_rot1, v_rot2)
+combination = sc(T1, T2, R21, v_r1, v_r2, v_rot1, v_rot2)
 combination.sum_spectra(integral_check=True, plot_check=True)
-# combination.plot()
+combination.plot()
 # combination.save_to_file()
 
 

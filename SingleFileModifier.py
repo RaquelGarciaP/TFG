@@ -22,9 +22,9 @@ class SingleFileModifier:
         # copy the standard wl into de final data frame as the wl ('x' axis)
         self.df['wl'] = self.__standard_wl['wl'].copy()
 
-        self.__temperature_interpolator(integral_check=True)
-        self.__doppler_shift(integral_check=True)
-        self.__doppler_broadening(integral_check=True)
+        self.__temperature_interpolator(integral_check=True, plot_check=True)
+        self.__doppler_shift(integral_check=True, plot_check=True)
+        self.__doppler_broadening(integral_check=True, plot_check=True)
 
     def __temperature_interpolator(self, integral_check=False, plot_check=False):
         print('Interpolation of Temperatures')
@@ -150,6 +150,13 @@ class SingleFileModifier:
         # if plot == True:
         if plot_check:
             print('Generating Doppler shift check plot')
+
+            # USE ONLY IF WE WANT TO PLOT A SMALL INTERVAL OF THE TOTAL DATA FRAME
+            '''mask = (initial_data['wl'] >= 6340.0) & (initial_data['wl'] <= 6380.0)
+            initial_data = initial_data[mask]
+            mask = (self.df['wl'] >= 6340.0) & (self.df['wl'] <= 6380.0)
+            df_copy = self.df[mask]'''
+
             # plot (to check the data):
             fig, ax = plt.subplots()
 
@@ -169,13 +176,11 @@ class SingleFileModifier:
     def __doppler_broadening(self, integral_check=False, plot_check=False):
         print('Applying Doppler Broadening')
         # we create a copy of the flux array (called initial_data bc it's the data b4 this modification):
-        initial_data = self.df['flux'].copy()
+        initial_data = self.df.copy()
 
         # we center the gaussian in the middle of the wave length axis:
-        # min_wl = self.df['wl'].iloc[0]  # minimum wave length
-        # max_wl = self.df['wl'].iloc[-1]  # maximum wave length
         middle = self.df['wl'].iloc[81200]  # wave length in the center of the wl array (81200 middle position)
-        mu = middle  # min_wl + (max_wl - min_wl) / 2.0  # mu = center of the gaussian
+        mu = middle
 
         # v sini = FWHM = 2*sqrt(2*ln2)*sigma = 2.35482 * sigma (in wl units: v sini * wl / c = FWHM)
         c = 299792458.0  # light velocity (m/s)
@@ -193,12 +198,10 @@ class SingleFileModifier:
         # multiply each element of the normalized gaussian array by delta_wl_i (we do that because when we
         # calculate the convolution (an integral) we need use the trapezium method: multiplying each 'y' by its delta_x
         # and doing the sum of all of them gives the approximated integral)
-        '''for i in range(len(gaussian)):
-            gaussian[i] = gaussian[i] * self.__standard_wl['delta wl'].iloc[i]'''
         gaussian = gaussian * self.__standard_wl['delta wl']
 
         # we convolve the initial flux with the normalized gaussian
-        self.df['flux'] = sp.signal.fftconvolve(initial_data, gaussian, mode="same")
+        self.df['flux'] = sp.signal.fftconvolve(initial_data['flux'], gaussian, mode="same")
 
         # check of the flux conservation (integral conservation)
         if integral_check:
@@ -207,7 +210,7 @@ class SingleFileModifier:
             integral_f = 0.0
 
             for i in range(len(self.df)):
-                integral_i += self.__standard_wl['delta wl'].iloc[i] * initial_data.iloc[i]
+                integral_i += self.__standard_wl['delta wl'].iloc[i] * initial_data['flux'].iloc[i]
 
             for i in range(len(self.df)):
                 integral_f += self.__standard_wl['delta wl'].iloc[i] * self.df['flux'].iloc[i]
@@ -223,10 +226,17 @@ class SingleFileModifier:
         # if plot == True:
         if plot_check:
             print('Generating Doppler broadening check plot')
+
+            # USE ONLY IF WE WANT TO PLOT A SMALL INTERVAL OF THE TOTAL DATA FRAME
+            '''mask = (initial_data['wl'] >= 6340.0) & (initial_data['wl'] <= 6380.0)
+            initial_data = initial_data[mask]
+            mask = (self.df['wl'] >= 6340.0) & (self.df['wl'] <= 6380.0)
+            df_copy = self.df[mask]'''
+
             # plot (to check the data):
             fig, ax = plt.subplots()
 
-            l1, = ax.plot(self.df['wl'], initial_data)
+            l1, = ax.plot(initial_data['wl'], initial_data['flux'])
             l2, = ax.plot(self.df['wl'], self.df['flux'])
 
             ax.legend((l1, l2), ('Initial flux', 'Final flux'), loc='upper right', shadow=False)
