@@ -1,16 +1,12 @@
-import pandas as pd
+import os
 
-col1 = [1,2,3,4,5,6,7,8,9,10,11,12]
-col2 = [6,8,10,12,13,14,15,19,20,22,23,25]
-dic = {'col1': col1, 'col2': col2}
-df = pd.DataFrame(dic)
+directory = 'params'  # name of the directory
+parent_dir = './CombinedSpectra/'  # parent directory path
+path = os.path.join(parent_dir, directory)  # path
 
-mask = (df['col1'] >= 6) & (df['col1'] <= 9)
-copi = df[mask]
-
-print(df)
-print(copi)
-
+for i in range(10):
+    file_name = 'time_' + str(i)
+    print(file_name)
 
 
 

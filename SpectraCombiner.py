@@ -1,9 +1,6 @@
 import pandas as pd
-import math
-import numpy as np
-import scipy as sp
 import matplotlib.pyplot as plt
-import SingleFileModifier as sfm
+from SingleFileModifier import SingleFileModifier
 
 
 class SpectraCombiner:
@@ -21,27 +18,30 @@ class SpectraCombiner:
         self.__v_rot2 = v_rot2
 
         # initialize class SingleFileModifier for each star
-        self.__sfm1 = sfm.SingleFileModifier(self.__T1, self.__v_r1, self.__v_rot1)
-        self.__sfm2 = sfm.SingleFileModifier(self.__T2, self.__v_r2, self.__v_rot2)
+        self.__sfm1 = SingleFileModifier(self.__T1, self.__v_r1, self.__v_rot1)
+        self.__sfm2 = SingleFileModifier(self.__T2, self.__v_r2, self.__v_rot2)
 
-        # save the data frame corresponding to each star (we call the data frame obtained after calling SingleFileMod..)
-        self.__df1 = self.__sfm1.df
-        self.__df2 = self.__sfm2.df
+        # save the data frame corresponding to each star (we call the data frame obtained after init SingleFileMod..)
+        self.__df1 = self.__sfm1.df.copy()
+        self.__df2 = self.__sfm2.df.copy()
 
         # read the standard wavelength file
         self.__standard_wl = pd.read_csv('./NewLibrary/standard_wl')
 
         # create the data frame for the combined spectra
-        self.__combined_df = pd.DataFrame()
+        self.combined_df = pd.DataFrame()
 
-    def sum_spectra(self, integral_check=False, plot_check=False):
+        # sum spectra (modifies self.combined_df)
+        self.__sum_spectra()
+
+    def __sum_spectra(self, integral_check=False, plot_check=False):
         print('Combining both fluxes')
 
         # the wl in the combined df will correspond to the standardized wl
-        self.__combined_df['wl'] = self.__standard_wl['wl'].copy()
+        self.combined_df['wl'] = self.__standard_wl['wl'].copy()
 
         # sum both fluxes taking into account the weight of each with R21 = R2/R1
-        self.__combined_df['flux'] = self.__df1['flux'] + self.__R21**2 * self.__df2['flux']
+        self.combined_df['flux'] = self.__df1['flux'] + self.__R21 ** 2 * self.__df2['flux']
 
         if integral_check:
             print('Calculating flux conservation')
@@ -55,8 +55,8 @@ class SpectraCombiner:
             for i in range(len(self.__df2)):
                 integral_2 += self.__standard_wl['wl'].iloc[i] * self.__df2['flux'].iloc[i]
 
-            for i in range(len(self.__combined_df)):
-                integral_f += self.__standard_wl['wl'].iloc[i] * self.__combined_df['flux'].iloc[i]
+            for i in range(len(self.combined_df)):
+                integral_f += self.__standard_wl['wl'].iloc[i] * self.combined_df['flux'].iloc[i]
 
             interpol_integral_flux = integral_1 + self.__R21**2 * integral_2
             diff = abs(interpol_integral_flux - integral_f)
@@ -83,7 +83,7 @@ class SpectraCombiner:
 
             l1, = ax.plot(self.__df1['wl'], self.__df1['flux'])
             l2, = ax.plot(self.__df2['wl'], self.__R21**2 * self.__df2['flux'])
-            l3, = ax.plot(self.__combined_df['wl'], self.__combined_df['flux'])
+            l3, = ax.plot(self.combined_df['wl'], self.combined_df['flux'])
             '''l1, = ax.plot(df1_copy['wl'], df1_copy['flux'])
             l2, = ax.plot(df2_copy['wl'], self.__R21 ** 2 * df2_copy['flux'])
             l3, = ax.plot(dfcomb_copy['wl'], dfcomb_copy['flux'])'''
@@ -101,14 +101,14 @@ class SpectraCombiner:
     def plot(self):
         print('Generating combined spectra plot')
 
-        plt.plot(self.__combined_df['wl'], self.__combined_df['flux'])
+        plt.plot(self.combined_df['wl'], self.combined_df['flux'])
         plt.xlabel('Wavelength (A)')
         plt.ylabel('Flux')
         plt.title('Combined Spectra')
         plt.show()
 
-    def save_to_file(self):
+    def save_to_file(self, path: str, file_name: str):
         print('Saving to file in the CombinedSpectra folder')
         # save the modified file to a csv in the folder 'NewLibrary'
-        self.__combined_df.to_csv('./CombinedSpectra/combined_' + str(self.__T1) + '_' + str(self.__T2) + '.csv', index=False)
+        self.combined_df.to_csv(path + '/' + file_name + '.csv', index=False)
 

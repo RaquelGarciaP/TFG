@@ -1,5 +1,5 @@
 from NewLibraryCreator import NewLibraryCreator as newlib
-from SpectraCombiner import SpectraCombiner as sc
+from SpectraTimeEvolver import SpectraTimeEvolver
 
 
 '''
@@ -13,16 +13,35 @@ test.instrumental_convolution(integral_check=True, plot_check=True)
 test.rebinning(integral_check=True, plot_check=True)
 test.save_to_file()'''
 
-T1, T2 = 11804.26, 11567.39
+
+T1, T2 = 11854.26, 11567.39
 R21 = 2.67
-v_r1, v_r2 = 11530.2, 11680.7
 v_rot1, v_rot2 = 2997.23, 3100.39
 
-combination = sc(T1, T2, R21, v_r1, v_r2, v_rot1, v_rot2)
-combination.sum_spectra(integral_check=True, plot_check=True)
-combination.plot()
-# combination.save_to_file()
+# general parameters of the stars
+general_params = T1, T2, R21, v_rot1, v_rot2
+# T: temperature of the star
+# R21 = R2/R1: ratio between the radius of each star
+# v_rot: rotational velocity
 
+
+period1, period2 = 65.25, 65.25
+K1, K2 = 0.56, 0.43
+ecc1, ecc2 = 0.52, 0.478
+omega1 = 52.34
+omega2 = omega1 + 180.0
+t_peri1, t_peri2 = 3.54, 18.31
+
+# orbital parameters
+orbital_params1 = period1, K1, ecc1, omega1, t_peri1
+orbital_params2 = period2, K2, ecc2, omega2, t_peri2
+# period: orbital period
+# K: radial velocity semi-amplitude
+# ecc: eccentricity of the orbit
+# omega: angle of periastron
+# t_peri: time of periastron_passage
+
+test = SpectraTimeEvolver(general_params, orbital_params1, orbital_params2)
 
 
 

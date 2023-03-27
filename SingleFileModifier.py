@@ -22,9 +22,10 @@ class SingleFileModifier:
         # copy the standard wl into de final data frame as the wl ('x' axis)
         self.df['wl'] = self.__standard_wl['wl'].copy()
 
-        self.__temperature_interpolator(integral_check=True, plot_check=True)
-        self.__doppler_shift(integral_check=True, plot_check=True)
-        self.__doppler_broadening(integral_check=True, plot_check=True)
+        # apply all the functions of the class
+        self.__temperature_interpolator()
+        self.__doppler_shift()
+        self.__doppler_broadening()
 
     def __temperature_interpolator(self, integral_check=False, plot_check=False):
         print('Interpolation of Temperatures')
@@ -38,6 +39,7 @@ class SingleFileModifier:
             t1 = int(floor * 100)
             t2 = int(ceil * 100)
 
+        # for T >= 7000 the difference between temperatures of the library changes
         else:
             if (floor % 2) == 0:
                 floor = floor
