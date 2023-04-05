@@ -1,6 +1,8 @@
 import os
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
+import imageio
 from SpectraCombiner import SpectraCombiner
 from KeplerianOrbit import KeplerianOrbit
 
@@ -11,11 +13,11 @@ class SpectraTimeEvolver:
 
         # params1, params2: parameters of star 1 and star 2
 
-        num_t = 10  # number of steps in t array
-        orbital_period = 65.25
+        self.__num_t = 25  # number of steps in t array
+        orbital_period = 301.25
 
         # time array
-        self.__t = np.linspace(0.0, orbital_period, num_t)
+        self.__t = np.linspace(0.0, orbital_period, self.__num_t)
 
         # general parameters of the stars
         self.__T1, self.__T2, self.__R21, self.__v_rot1, self.__v_rot2 = general_params
@@ -39,6 +41,8 @@ class SpectraTimeEvolver:
         # radial velocity array of both stars
         self.__rv1 = orbit1.rv.copy()
         self.__rv2 = orbit2.rv.copy()
+        print(self.__rv1)
+        print(self.__rv2)
 
         # combined spectra in time_i
         self.__combined_i = pd.DataFrame()
@@ -49,14 +53,14 @@ class SpectraTimeEvolver:
     def __time_evolution(self):
         # first we create a directory (folder) that will contain all the combined spectra for each time
 
-        '''directory = 'params2'  # name of the directory
+        directory = 'params'  # name of the directory
         parent_dir = './CombinedSpectra/'  # parent directory path
         path = os.path.join(parent_dir, directory)  # path
         # create the directory
-        os.mkdir(path)'''
+        # os.mkdir(path)
 
         # now we can save the combined spectra for each time inside the directory
-
+        images = []
         # loop to obtain the time evolution of star 1 and 2:
         for i in range(len(self.__t)):
             # initialize class for each time (new t => new rv => new combination)
@@ -65,11 +69,24 @@ class SpectraTimeEvolver:
             self.__combined_i = comb.combined_df.copy()
 
             # plot check
-            comb.plot()
+            # comb.plot()
 
-            '''# save to file
-            file_name = 'time_' + str(i)
-            comb.save_to_file(path, file_name)'''
+            # save to file
+            # file_name = 'time_' + str(i)
+            # comb.save_to_file(path, file_name)
+
+            # GIF:
+            # Crear lista de imágenes a partir de los datos
+            fig, ax = plt.subplots(figsize=(14, 8))
+            self.__combined_i.plot(x='wl', y='flux', ax=ax)
+            ax.set_title(f'Frame {i}')
+            fig.canvas.draw()
+            image = np.array(fig.canvas.renderer.buffer_rgba())
+            images.append(image)
+            plt.close()
+
+        # Guardar lista de imágenes en un archivo .gif
+        imageio.mimsave('time_evolution.gif', images, fps=10)
 
     '''def save_to_folder(self):
         # first we create a directory (folder) that will contain all the combined spectra for each time

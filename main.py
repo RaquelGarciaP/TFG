@@ -25,9 +25,9 @@ general_params = T1, T2, R21, v_rot1, v_rot2
 # v_rot: rotational velocity
 
 
-period1, period2 = 65.25, 65.25
-K1, K2 = 0.56, 0.43
-ecc1, ecc2 = 0.52, 0.478
+period1, period2 = 301.25, 301.25
+K1, K2 = 147980.06, 156760.43
+ecc1, ecc2 = 0.12, 0.078
 omega1 = 52.34
 omega2 = omega1 + 180.0
 t_peri1, t_peri2 = 3.54, 18.31
