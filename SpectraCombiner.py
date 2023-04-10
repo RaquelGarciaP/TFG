@@ -1,47 +1,91 @@
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 from SingleFileModifier import SingleFileModifier
+from KeplerianOrbit import KeplerianOrbit
 
 
 class SpectraCombiner:
 
-    def __init__(self, T1, T2, R21, v_r1, v_r2, v_rot1, v_rot2):
-        # save the introduced variables in class variables
-        self.__T1 = T1  # temperature
-        self.__T2 = T2
-        self.__R21 = R21  # R2/R1 (radius of the stars)
-        # self.__L21 = L21  # L2/L1 (luminosities of the stars)
-        # self.__inc = inc  # inclination of the orbital plane
-        self.__v_r1 = v_r1  # radial velocity
-        self.__v_r2 = v_r2
-        self.__v_rot1 = v_rot1  # rotation velocity = v * sin(i), i: inclination
-        self.__v_rot2 = v_rot2
+    def __init__(self, standard_wl, general_params, orbital_params1, orbital_params2, num_t):
+
+        # save the standard wavelength df (it is an input, so we only read the file one time -in main-)
+        self.__standard_wl = standard_wl
+
+        # general parameters of the stars
+        self.__T1, self.__T2, self.__R21, self.__v_rot1, self.__v_rot2 = general_params
+        # T: temperature of the star
+        # R21 = R2/R1: ratio between the radius of each star
+        # v_rot: rotational velocity
+
+        # orbital parameters
+        self.__period1, self.__K1, self.__ecc1, self.__omega1, self.__t_peri1 = orbital_params1
+        self.__period2, self.__K2, self.__ecc2, self.__omega2, self.__t_peri2 = orbital_params2
+        # period: orbital period
+        # K: radial velocity semi-amplitude
+        # ecc: eccentricity of the orbit
+        # omega: angle of periastron
+        # t_peri: time of periastron_passage
+
+        # number of steps in t array
+        self.__num_t = num_t
+
+        # create the data frame for the combined spectra (each column will contain the spectra for a concrete time)
+        self.final_df = pd.DataFrame()
+
+        # time evolution (self.final_df will be filled with the combined spectra for each time)
+        self.__time_evolution()
+
+    def __time_evolution(self):
+
+        # time array creation
+        # the time array goes from t=0 to t=period -> we have a full orbital cycle
+        # (both stars have the same orbital period)
+        t = np.linspace(0.0, self.__period1, self.__num_t)
+
+        # initialize keplerian orbit for both stars to obtain their radial velocity
+        orbit1 = KeplerianOrbit(t, self.__period1, self.__K1, self.__ecc1, self.__omega1, self.__t_peri1)
+        orbit2 = KeplerianOrbit(t, self.__period2, self.__K2, self.__ecc2, self.__omega2, self.__t_peri2)
+
+        # radial velocity array of both stars
+        rv1 = orbit1.rv.copy()
+        rv2 = orbit2.rv.copy()
 
         # initialize class SingleFileModifier for each star
-        self.__sfm1 = SingleFileModifier(self.__T1, self.__v_r1, self.__v_rot1)
-        self.__sfm2 = SingleFileModifier(self.__T2, self.__v_r2, self.__v_rot2)
+        sfm1 = SingleFileModifier(self.__standard_wl, self.__T1, self.__v_rot1)
+        sfm2 = SingleFileModifier(self.__standard_wl, self.__T2, self.__v_rot2)
 
-        # save the data frame corresponding to each star (we call the data frame obtained after init SingleFileMod..)
-        self.__df1 = self.__sfm1.df.copy()
-        self.__df2 = self.__sfm2.df.copy()
+        # loop for time evolution: we calculate the Doppler shift for each radial vel of the array (and obtain a
+        # combined dataframe for each time)
+        for i in range(self.__num_t):
+            # Doppler shift calculus
+            sfm1.doppler_shift(rv1[i])
+            sfm2.doppler_shift(rv2[i])
 
-        # read the standard wavelength file
-        self.__standard_wl = pd.read_csv('./NewLibrary/standard_wl')
+            # save the flux of the dataframe corresponding to each star after the Doppler shift for time_i
+            df1_i = sfm1.df['flux'].copy()
+            df2_i = sfm2.df['flux'].copy()
 
-        # create the data frame for the combined spectra
-        self.combined_df = pd.DataFrame()
+            # obtaining the dataframe corresponding to this time
+            df_i = self.__sum_spectra(df1_i, df2_i)
 
-        # sum spectra (modifies self.combined_df)
-        self.__sum_spectra()
+            # finally we add the dataframe for time_i to the general dataframe (each column will be a df
+            # in a concrete time_i)
+            column_name = 'time_' + str(i)
+            self.final_df[column_name] = df_i
 
-    def __sum_spectra(self, integral_check=False, plot_check=False):
+    def __sum_spectra(self, df1_i, df2_i, integral_check=False, plot_check=False):
         print('Combining both fluxes')
 
+        df_i = pd.DataFrame()
+
         # the wl in the combined df will correspond to the standardized wl
-        self.combined_df['wl'] = self.__standard_wl['wl'].copy()
+        # self.combined_df['wl'] = self.__standard_wl['wl'].copy()
+        df_i['wl'] = self.__standard_wl['wl'].copy()
 
         # sum both fluxes taking into account the weight of each with R21 = R2/R1
-        self.combined_df['flux'] = self.__df1['flux'] + self.__R21 ** 2 * self.__df2['flux']
+        # self.combined_df['flux'] = self.__df1['flux'] + self.__R21 * self.__R21 * self.__df2['flux']
+        df_i['flux'] = df1_i + self.__R21 * self.__R21 * df2_i
 
         if integral_check:
             print('Calculating flux conservation')
@@ -49,14 +93,14 @@ class SpectraCombiner:
             integral_2 = 0.0
             integral_f = 0.0
 
-            for i in range(len(self.__df1)):
-                integral_1 += self.__standard_wl['wl'].iloc[i] * self.__df1['flux'].iloc[i]
+            for i in range(len(df1_i)):
+                integral_1 += self.__standard_wl['wl'].iloc[i] * df1_i['flux'].iloc[i]
 
-            for i in range(len(self.__df2)):
-                integral_2 += self.__standard_wl['wl'].iloc[i] * self.__df2['flux'].iloc[i]
+            for i in range(len(df2_i)):
+                integral_2 += self.__standard_wl['wl'].iloc[i] * df2_i['flux'].iloc[i]
 
-            for i in range(len(self.combined_df)):
-                integral_f += self.__standard_wl['wl'].iloc[i] * self.combined_df['flux'].iloc[i]
+            for i in range(len(self.final_df)):
+                integral_f += self.__standard_wl['wl'].iloc[i] * self.final_df['flux'].iloc[i]
 
             interpol_integral_flux = integral_1 + self.__R21**2 * integral_2
             diff = abs(interpol_integral_flux - integral_f)
@@ -81,9 +125,9 @@ class SpectraCombiner:
             # plot (to check the data):
             fig, ax = plt.subplots()
 
-            l1, = ax.plot(self.__df1['wl'], self.__df1['flux'])
-            l2, = ax.plot(self.__df2['wl'], self.__R21**2 * self.__df2['flux'])
-            l3, = ax.plot(self.combined_df['wl'], self.combined_df['flux'])
+            l1, = ax.plot(df1_i['wl'], df1_i['flux'])
+            l2, = ax.plot(df2_i['wl'], self.__R21*self.__R21 * df2_i['flux'])
+            l3, = ax.plot(self.final_df['wl'], self.final_df['flux'])
             '''l1, = ax.plot(df1_copy['wl'], df1_copy['flux'])
             l2, = ax.plot(df2_copy['wl'], self.__R21 ** 2 * df2_copy['flux'])
             l3, = ax.plot(dfcomb_copy['wl'], dfcomb_copy['flux'])'''
@@ -98,10 +142,12 @@ class SpectraCombiner:
         else:
             pass
 
+        return df_i
+
     def plot(self):
         print('Generating combined spectra plot')
 
-        plt.plot(self.combined_df['wl'], self.combined_df['flux'])
+        plt.plot(self.final_df['wl'], self.final_df['flux'])
         plt.xlabel('Wavelength (A)')
         plt.ylabel('Flux')
         plt.title('Combined Spectra')
@@ -110,5 +156,5 @@ class SpectraCombiner:
     def save_to_file(self, path: str, file_name: str):
         print('Saving to file in the CombinedSpectra folder')
         # save the modified file to a csv in the folder 'NewLibrary'
-        self.combined_df.to_csv(path + '/' + file_name + '.csv', index=False)
+        self.final_df.to_csv(path + '/' + file_name + '.csv', index=False)
 

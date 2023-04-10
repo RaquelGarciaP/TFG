@@ -8,23 +8,24 @@ import matplotlib.pyplot as plt
 
 class SingleFileModifier:
 
-    def __init__(self, temperature, radial_vel, vel_rotation):
+    def __init__(self, standard_wl, temperature, vel_rotation):
 
         self.__temperature = temperature
-        self.__radial_vel = radial_vel
+        # self.__radial_vel = radial_vel
         self.__vel_rotation = vel_rotation  # rotation velocity = v * sin(i), i: inclination
 
-        # read the standard wavelength file (with CARMENES sampling)
-        self.__standard_wl = pd.read_csv('./NewLibrary/standard_wl')
+        # save the standard wavelength df (it is an input, so we only read the file one time -in main-)
+        self.__standard_wl = standard_wl
 
         # create the data frame that will contain the data after the modifications
         self.df = pd.DataFrame()
+
         # copy the standard wl into de final data frame as the wl ('x' axis)
         self.df['wl'] = self.__standard_wl['wl'].copy()
 
         # apply all the functions of the class
         self.__temperature_interpolator()
-        self.__doppler_shift()
+        # self.__doppler_shift()
         self.__doppler_broadening()
 
     def __temperature_interpolator(self, integral_check=False, plot_check=False):
@@ -60,6 +61,13 @@ class SingleFileModifier:
         # we read the corresponding files
         df_t1 = pd.read_csv('./NewLibrary/' + file_name_t1)
         df_t2 = pd.read_csv('./NewLibrary/' + file_name_t2)
+
+        ############################################# NEW #####################################################
+        '''# copy the wave length of one of the files to standard_wl (both files have the standardized wl)
+        self.__standard_wl = df_t1['wl'].copy()
+        # copy the standard wl into de final data frame as the wl ('x' axis)
+        self.df['wl'] = self.__standard_wl['wl'].copy()'''
+        ############################################# NEW #####################################################
 
         print('Interpolating with files: ', file_name_t1, ' and ', file_name_t2)
 
@@ -111,7 +119,7 @@ class SingleFileModifier:
         else:
             pass
 
-    def __doppler_shift(self, integral_check=False, plot_check=False):
+    def doppler_shift(self, radial_vel, integral_check=False, plot_check=False):
         print('Applying Doppler Shift')
         c = 299792458.0  # light velocity (m/s)
 
@@ -119,7 +127,7 @@ class SingleFileModifier:
         initial_data = self.df.copy()
 
         # Doppler shift
-        self.df['wl'] = (1.0 + float(self.__radial_vel) / c) * initial_data['wl']
+        self.df['wl'] = (1.0 + float(radial_vel) / c) * initial_data['wl']
 
         # now we want to re-express the flux in the standardized wl
         print('Re-Standardizing the wavelength after Doppler shift')
@@ -189,18 +197,38 @@ class SingleFileModifier:
         ct = self.__vel_rotation / (2.35482 * c)
         sigma = ct * self.df['wl']
 
+        # todo: fer els càlculs següents i comprovar amb quin es tarda menys
+
+        # CÀLCUL 1:
         gauss = collections.deque()
 
         # loop to calculate the gaussian:
+        # also, we multiply each element of the normalized gaussian array by delta_wl_i (we do that because when we
+        # calculate the convolution (an integral) we need use the trapezium method: multiplying each 'y' by its delta_x
+        # and doing the sum of all of them gives the approximated integral)
         for i in range(len(self.df)):
-            gauss.append((1.0 / (math.sqrt(2.0 * math.pi) * sigma.iloc[i])) * np.exp(-((self.df['wl'].iloc[i] - mu) / sigma.iloc[i]) ** 2 / 2.0))
+            gauss.append(self.__standard_wl['delta wl'].iloc[i] * (1.0 / (math.sqrt(2.0 * math.pi) * sigma.iloc[i])) *
+                         np.exp(-((self.df['wl'].iloc[i] - mu) / sigma.iloc[i]) * ((self.df['wl'].iloc[i] - mu) / sigma.iloc[i]) / 2.0))
 
         gaussian = list(gauss)
+
+        # CÀLCUL 2:
+        gaussian = np.empty(len(self.df))
+
+        for i in range(len(self.df)):
+            gaussian[i] = self.__standard_wl['delta wl'].iloc[i] * (1.0 / (math.sqrt(2.0 * math.pi) * sigma.iloc[i]))\
+                          * np.exp(-((self.df['wl'].iloc[i] - mu) / sigma.iloc[i]) * ((self.df['wl'].iloc[i] - mu) / sigma.iloc[i]) / 2.0)
+
+        # CÀLCUL 3:
+        # gaussian = np.empty(len(self.df))
+
+        gaussian = self.__standard_wl['delta wl'] * (1.0 / (math.sqrt(2.0 * math.pi) * sigma)) \
+                   * np.exp(-((self.df['wl'] - mu) / sigma) * ((self.df['wl'] - mu) / sigma) / 2.0)
 
         # multiply each element of the normalized gaussian array by delta_wl_i (we do that because when we
         # calculate the convolution (an integral) we need use the trapezium method: multiplying each 'y' by its delta_x
         # and doing the sum of all of them gives the approximated integral)
-        gaussian = gaussian * self.__standard_wl['delta wl']
+        # gaussian = gaussian * self.__standard_wl['delta wl']
 
         # we convolve the initial flux with the normalized gaussian
         self.df['flux'] = sp.signal.fftconvolve(initial_data['flux'], gaussian, mode="same")
