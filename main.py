@@ -1,6 +1,8 @@
 import pandas as pd
-from NewLibraryCreator import NewLibraryCreator as newlib
-from SpectraTimeEvolver import SpectraTimeEvolver
+from SpectraCombiner import SpectraCombiner
+# from NewLibraryCreator import NewLibraryCreator as newlib
+# from SpectraTimeEvolver import SpectraTimeEvolver
+# from SingleFileModifier import SingleFileModifier
 
 
 '''
@@ -19,7 +21,7 @@ test.save_to_file()'''
 standard_wl = pd.read_csv('./NewLibrary/standard_wl')
 
 # number of steps in t array (= measures over time)
-num_t = 10
+num_t = 100
 
 # *** general parameters of the stars ***
 T1, T2 = 11854.26, 11567.39
@@ -32,7 +34,7 @@ general_params = T1, T2, R21, v_rot1, v_rot2
 # v_rot: rotational velocity
 
 # *** orbital parameters of the stars ***
-period1, period2 = 301.25, 301.25
+period1, period2 = 1728000.0, 1728000.0  # seconds
 K1, K2 = 147980.06, 156760.43
 ecc1, ecc2 = 0.0, 0.0
 omega1 = 52.34
@@ -47,7 +49,8 @@ orbital_params2 = period2, K2, ecc2, omega2, t_peri2
 # omega: angle of periastron
 # t_peri: time of periastron_passage
 
-test = SpectraTimeEvolver(standard_wl, general_params, orbital_params1, orbital_params2, num_t)
+test = SpectraCombiner(standard_wl, general_params, orbital_params1, orbital_params2, num_t)
+test.save_to_file('./CombinedSpectra/', 'test_file')
 
 
 

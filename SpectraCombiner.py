@@ -1,8 +1,11 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import time
 from SingleFileModifier import SingleFileModifier
 from KeplerianOrbit import KeplerianOrbit
+
+start_time = time.time()
 
 
 class SpectraCombiner:
@@ -35,6 +38,8 @@ class SpectraCombiner:
 
         # time evolution (self.final_df will be filled with the combined spectra for each time)
         self.__time_evolution()
+        end_time = time.time()
+        print('FINAL TIME: ', end_time-start_time)
 
     def __time_evolution(self):
 
@@ -55,6 +60,9 @@ class SpectraCombiner:
         sfm1 = SingleFileModifier(self.__standard_wl, self.__T1, self.__v_rot1)
         sfm2 = SingleFileModifier(self.__standard_wl, self.__T2, self.__v_rot2)
 
+        bf_loop_time = time.time()
+        print('TIME BEFORE TIME EVOLUTION LOOP : ', bf_loop_time-start_time)
+
         # loop for time evolution: we calculate the Doppler shift for each radial vel of the array (and obtain a
         # combined dataframe for each time)
         for i in range(self.__num_t):
@@ -71,8 +79,10 @@ class SpectraCombiner:
 
             # finally we add the dataframe for time_i to the general dataframe (each column will be a df
             # in a concrete time_i)
-            column_name = 'time_' + str(i)
-            self.final_df[column_name] = df_i
+            column_name_wl = 'wl_time_' + str(i)
+            column_name_flux = 'flux_time_' + str(i)
+            self.final_df[column_name_wl] = df_i['wl']
+            self.final_df[column_name_flux] = df_i['flux']
 
     def __sum_spectra(self, df1_i, df2_i, integral_check=False, plot_check=False):
         print('Combining both fluxes')
@@ -156,5 +166,7 @@ class SpectraCombiner:
     def save_to_file(self, path: str, file_name: str):
         print('Saving to file in the CombinedSpectra folder')
         # save the modified file to a csv in the folder 'NewLibrary'
-        self.final_df.to_csv(path + '/' + file_name + '.csv', index=False)
+        self.final_df.to_csv(path + file_name + '.csv', index=False)
+        save_time = time.time()
+        print('TIME AFTER SAVING FILE : ', save_time - start_time)
 

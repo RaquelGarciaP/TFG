@@ -2,7 +2,6 @@ import numpy as np
 import pandas as pd
 import scipy as sp
 import math
-import collections
 import matplotlib.pyplot as plt
 
 
@@ -197,38 +196,12 @@ class SingleFileModifier:
         ct = self.__vel_rotation / (2.35482 * c)
         sigma = ct * self.df['wl']
 
-        # todo: fer els càlculs següents i comprovar amb quin es tarda menys
-
-        # CÀLCUL 1:
-        gauss = collections.deque()
-
-        # loop to calculate the gaussian:
-        # also, we multiply each element of the normalized gaussian array by delta_wl_i (we do that because when we
+        # calculus of the gaussian (implicit loop):
+        # also, we multiply each element of the normalized gaussian by delta_wl_i (we do that because when we
         # calculate the convolution (an integral) we need use the trapezium method: multiplying each 'y' by its delta_x
         # and doing the sum of all of them gives the approximated integral)
-        for i in range(len(self.df)):
-            gauss.append(self.__standard_wl['delta wl'].iloc[i] * (1.0 / (math.sqrt(2.0 * math.pi) * sigma.iloc[i])) *
-                         np.exp(-((self.df['wl'].iloc[i] - mu) / sigma.iloc[i]) * ((self.df['wl'].iloc[i] - mu) / sigma.iloc[i]) / 2.0))
-
-        gaussian = list(gauss)
-
-        # CÀLCUL 2:
-        gaussian = np.empty(len(self.df))
-
-        for i in range(len(self.df)):
-            gaussian[i] = self.__standard_wl['delta wl'].iloc[i] * (1.0 / (math.sqrt(2.0 * math.pi) * sigma.iloc[i]))\
-                          * np.exp(-((self.df['wl'].iloc[i] - mu) / sigma.iloc[i]) * ((self.df['wl'].iloc[i] - mu) / sigma.iloc[i]) / 2.0)
-
-        # CÀLCUL 3:
-        # gaussian = np.empty(len(self.df))
-
         gaussian = self.__standard_wl['delta wl'] * (1.0 / (math.sqrt(2.0 * math.pi) * sigma)) \
                    * np.exp(-((self.df['wl'] - mu) / sigma) * ((self.df['wl'] - mu) / sigma) / 2.0)
-
-        # multiply each element of the normalized gaussian array by delta_wl_i (we do that because when we
-        # calculate the convolution (an integral) we need use the trapezium method: multiplying each 'y' by its delta_x
-        # and doing the sum of all of them gives the approximated integral)
-        # gaussian = gaussian * self.__standard_wl['delta wl']
 
         # we convolve the initial flux with the normalized gaussian
         self.df['flux'] = sp.signal.fftconvolve(initial_data['flux'], gaussian, mode="same")

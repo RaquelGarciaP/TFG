@@ -50,20 +50,12 @@ class NewLibraryCreator:
         ct = 1.0 / (2.35482 * self.__R)  # delta_lambda = lambda/R = FWHM = 2*sqrt(2*ln2)*sigma = 2.35482 * sigma
         sigma = ct * self.__initial_df['wl']
 
-        # create gaussian collection
-        gauss = collections.deque()
-
-        # loop to calculate the normalized gaussian (fill gaussian collection):
-        for i in range(len(self.__initial_df)):
-            gauss.append((1.0 / (math.sqrt(2.0 * math.pi) * sigma.iloc[i])) * np.exp(-((self.__initial_df['wl'].iloc[i] - mu) / sigma.iloc[i]) ** 2 / 2.0))
-
-        # convert the collection into a list
-        gaussian = list(gauss)
-
-        # multiply each element of the normalized gaussian array by delta_wl_phoenix (we do that because when we
+        # calculus of the gaussian (implicit loop):
+        # also, we multiply each element of the normalized gaussian by delta_wl_i (we do that because when we
         # calculate the convolution (an integral) we need use the trapezium method: multiplying each 'y' by its delta_x
         # and doing the sum of all of them gives the approximated integral)
-        gaussian = [x * self.__delta_wl_phoenix for x in gaussian]
+        gaussian = self.__delta_wl_phoenix * (1.0 / (math.sqrt(2.0 * math.pi) * sigma)) * \
+                   np.exp(-((self.__initial_df['wl'] - mu) / sigma) * ((self.__initial_df['wl'] - mu) / sigma) / 2.0)
 
         # we convolve the initial flux with the normalized gaussian
         self.__initial_df['flux'] = sp.signal.fftconvolve(initial_data, gaussian, mode="same")
@@ -127,6 +119,8 @@ class NewLibraryCreator:
         # create a new column in the initial data frame that contains the position of each wl
         self.__initial_df['pos'] = lst
 
+        # todo: aquest càlcul funciona creant un np.array.empty amb la dimensió de standard_wl i sobreescribint cada
+        #  flux[i] pel valor corresponent -> comprovar quin càlcul és més ràpid (probablement amb np)
         # create a collection that will contain the flux in the new standard wl (after rebinning)
         flux = collections.deque()
 

@@ -6,8 +6,8 @@ from KeplerianOrbit import KeplerianOrbit
 # parameters
 period1, period2 = 1301.25, 1301.25
 K1, K2 = 147980.06, 147980.06
-ecc1, ecc2 = 0.50, 0.50
-omega1 = 0.0
+ecc1, ecc2 = 0.5, 0.5
+omega1 = 90.0
 omega2 = omega1 + 180.0
 t_peri1, t_peri2 = 3.54, 18.31
 
