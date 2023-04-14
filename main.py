@@ -34,15 +34,15 @@ general_params = T1, T2, R21, v_rot1, v_rot2
 # v_rot: rotational velocity
 
 # *** orbital parameters of the stars ***
-period1, period2 = 1728000.0, 1728000.0  # seconds
+period = 1728000.0  # seconds
 K1, K2 = 147980.06, 156760.43
-ecc1, ecc2 = 0.0, 0.0
+ecc = 0.0
 omega1 = 52.34
 omega2 = omega1 + 180.0
-t_peri1, t_peri2 = 3.54, 18.31
+t_peri = 3.54
 
-orbital_params1 = period1, K1, ecc1, omega1, t_peri1
-orbital_params2 = period2, K2, ecc2, omega2, t_peri2
+orbital_params1 = period, K1, ecc, omega1, t_peri
+orbital_params2 = period, K2, ecc, omega2, t_peri
 # period: orbital period
 # K: radial velocity semi-amplitude
 # ecc: eccentricity of the orbit
