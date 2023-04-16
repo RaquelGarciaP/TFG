@@ -4,12 +4,12 @@ from KeplerianOrbit import KeplerianOrbit
 
 
 # parameters
-period = 234.0 # 1728000.0  # 234.0
-K1, K2 = 147980.06, 147980.06
-ecc1, ecc2 = 0.0, 0.0
-omega1 = 0.0
+period = 1728000.0  # seconds
+K1, K2 = 147980.06, 147980.06  # 156760.43
+ecc = 0.5
+omega1 = 90.0
 omega2 = omega1 + 180.0
-t_peri1, t_peri2 = 3.54, 18.31
+t_peri = 3.54
 
 # time array creation
 # the time array goes from t=0 to t=period -> we have a full orbital cycle
@@ -18,12 +18,12 @@ num_t = 500
 t = np.linspace(0.0, 5*period, num_t)
 
 # initialize keplerian orbit for both stars to obtain their radial velocity
-orbit1 = KeplerianOrbit(t, period, K1, ecc1, omega1, t_peri1)
-orbit2 = KeplerianOrbit(t, period, K2, ecc2, omega2, t_peri2)
+orbit = KeplerianOrbit(t, period, ecc, t_peri)
+# orbit2 = KeplerianOrbit(t, period, K2, ecc2, omega2, t_peri2)
 
 # radial velocity array of both stars
-rv1 = orbit1.rv.copy()
-rv2 = orbit2.rv.copy()
+rv1 = orbit.keplerian_orbit(K1, omega1)
+rv2 = orbit.keplerian_orbit(K2, omega2)
 
 fig, ax = plt.subplots()
 l1, = ax.plot(t, rv1)

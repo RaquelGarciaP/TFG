@@ -41,16 +41,16 @@ omega1 = 52.34
 omega2 = omega1 + 180.0
 t_peri = 3.54
 
-orbital_params1 = period, K1, ecc, omega1, t_peri
-orbital_params2 = period, K2, ecc, omega2, t_peri
+orbital_params = period, K1, K2, ecc, omega1, omega2, t_peri
+# ####orbital_params2 = period, K2, ecc, omega2, t_peri
 # period: orbital period
 # K: radial velocity semi-amplitude
 # ecc: eccentricity of the orbit
 # omega: angle of periastron
 # t_peri: time of periastron_passage
 
-test = SpectraCombiner(standard_wl, general_params, orbital_params1, orbital_params2, num_t)
-test.save_to_file('./CombinedSpectra/', 'test_file')
+test = SpectraCombiner(standard_wl, general_params, orbital_params, num_t)
+# test.save_to_file('./CombinedSpectra/', 'test_file')
 
 
 

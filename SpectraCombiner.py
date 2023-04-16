@@ -10,7 +10,7 @@ start_time = time.time()
 
 class SpectraCombiner:
 
-    def __init__(self, standard_wl, general_params, orbital_params1, orbital_params2, num_t):
+    def __init__(self, standard_wl, general_params, orbital_params, num_t):
 
         # save the standard wavelength df (it is an input, so we only read the file one time -in main-)
         self.__standard_wl = standard_wl
@@ -22,8 +22,8 @@ class SpectraCombiner:
         # v_rot: rotational velocity
 
         # orbital parameters
-        self.__period1, self.__K1, self.__ecc1, self.__omega1, self.__t_peri1 = orbital_params1
-        self.__period2, self.__K2, self.__ecc2, self.__omega2, self.__t_peri2 = orbital_params2
+        self.__period, self.__K1, self.__K2, self.__ecc, self.__omega1, self.__omega2, self.__t_peri = orbital_params
+        # ####self.__period2, self.__K2, self.__ecc2, self.__omega2, self.__t_peri2 = orbital_params2
         # period: orbital period
         # K: radial velocity semi-amplitude
         # ecc: eccentricity of the orbit
@@ -46,15 +46,15 @@ class SpectraCombiner:
         # time array creation
         # the time array goes from t=0 to t=period -> we have a full orbital cycle
         # (both stars have the same orbital period)
-        t = np.linspace(0.0, self.__period1, self.__num_t)
+        t = np.linspace(0.0, self.__period, self.__num_t)
 
-        # initialize keplerian orbit for both stars to obtain their radial velocity
-        orbit1 = KeplerianOrbit(t, self.__period1, self.__K1, self.__ecc1, self.__omega1, self.__t_peri1)
-        orbit2 = KeplerianOrbit(t, self.__period2, self.__K2, self.__ecc2, self.__omega2, self.__t_peri2)
+        # initialize keplerian orbit (both stars follow the same orbit, and depending on their mass, i.e., K, and omega,
+        # we obtain a different radial velocity)
+        orbit = KeplerianOrbit(t, self.__period, self.__ecc, self.__t_peri)
 
-        # radial velocity array of both stars
-        rv1 = orbit1.rv.copy()
-        rv2 = orbit2.rv.copy()
+        # radial velocity array for each star
+        rv1 = orbit.keplerian_orbit(self.__K1, self.__omega1)
+        rv2 = orbit.keplerian_orbit(self.__K2, self.__omega2)
 
         # initialize class SingleFileModifier for each star
         sfm1 = SingleFileModifier(self.__standard_wl, self.__T1, self.__v_rot1)
@@ -85,7 +85,7 @@ class SpectraCombiner:
             self.final_df[column_name_flux] = df_i['flux']
 
     def __sum_spectra(self, df1_i, df2_i, integral_check=False, plot_check=False):
-        print('Combining both fluxes')
+        # print('Combining both fluxes')
 
         df_i = pd.DataFrame()
 

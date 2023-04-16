@@ -28,7 +28,7 @@ class SingleFileModifier:
         self.__doppler_broadening()
 
     def __temperature_interpolator(self, integral_check=False, plot_check=False):
-        print('Interpolation of Temperatures')
+        # print('Interpolation of Temperatures')
 
         val = float(self.__temperature) / 100.0
         floor = math.floor(val)
@@ -119,7 +119,7 @@ class SingleFileModifier:
             pass
 
     def doppler_shift(self, radial_vel, integral_check=False, plot_check=False):
-        print('Applying Doppler Shift')
+        # print('Applying Doppler Shift')
         c = 299792458.0  # light velocity (m/s)
 
         # we save the data before the Doppler shift (we only do this to do the check_plot)
@@ -129,7 +129,7 @@ class SingleFileModifier:
         self.df['wl'] = (1.0 + float(radial_vel) / c) * initial_data['wl']
 
         # now we want to re-express the flux in the standardized wl
-        print('Re-Standardizing the wavelength after Doppler shift')
+        # print('Re-Standardizing the wavelength after Doppler shift')
         # use numpy.interp() to obtain the interpolation of the flux with the standard wl -> the flux corresponding
         # to the standardized wl
         self.df['flux'] = np.interp(self.__standard_wl['wl'], self.df['wl'], self.df['flux'])
@@ -183,7 +183,7 @@ class SingleFileModifier:
             pass
 
     def __doppler_broadening(self, integral_check=False, plot_check=False):
-        print('Applying Doppler Broadening')
+        # print('Applying Doppler Broadening')
         # we create a copy of the flux array (called initial_data bc it's the data b4 this modification):
         initial_data = self.df.copy()
 
