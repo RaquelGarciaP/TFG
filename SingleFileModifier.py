@@ -61,13 +61,6 @@ class SingleFileModifier:
         df_t1 = pd.read_csv('./NewLibrary/' + file_name_t1)
         df_t2 = pd.read_csv('./NewLibrary/' + file_name_t2)
 
-        ############################################# NEW #####################################################
-        '''# copy the wave length of one of the files to standard_wl (both files have the standardized wl)
-        self.__standard_wl = df_t1['wl'].copy()
-        # copy the standard wl into de final data frame as the wl ('x' axis)
-        self.df['wl'] = self.__standard_wl['wl'].copy()'''
-        ############################################# NEW #####################################################
-
         print('Interpolating with files: ', file_name_t1, ' and ', file_name_t2)
 
         # we do the interpolation (implicit loop)
@@ -106,7 +99,7 @@ class SingleFileModifier:
 
             l1, = ax.plot(df_t1['wl'], df_t1['flux'])
             l2, = ax.plot(df_t2['wl'], df_t2['flux'])
-            l3, = ax.plot(self.df['wl'], self.df['flux'])
+            l3, = ax.plot(self.__standard_wl['wl'], self.df['flux'])
 
             ax.legend((l1, l2, l3), ('T1', 'T2', 'Combined T'), loc='upper right', shadow=False)
             ax.set_xlabel('Wavelength (A)')
@@ -169,8 +162,8 @@ class SingleFileModifier:
             # plot (to check the data):
             fig, ax = plt.subplots()
 
-            l1, = ax.plot(initial_data['wl'], initial_data['flux'])
-            l2, = ax.plot(self.df['wl'], self.df['flux'])
+            l1, = ax.plot(self.__standard_wl['wl'], initial_data['flux'])
+            l2, = ax.plot(self.__standard_wl['wl'], self.df['flux'])
 
             ax.legend((l1, l2), ('Initial flux', 'Final flux'), loc='upper right', shadow=False)
             ax.set_xlabel('Wavelength (A)')
@@ -240,7 +233,7 @@ class SingleFileModifier:
             fig, ax = plt.subplots()
 
             l1, = ax.plot(initial_data['wl'], initial_data['flux'])
-            l2, = ax.plot(self.df['wl'], self.df['flux'])
+            l2, = ax.plot(self.__standard_wl['wl'], self.df['flux'])
 
             ax.legend((l1, l2), ('Initial flux', 'Final flux'), loc='upper right', shadow=False)
             ax.set_xlabel('Wavelength (A)')

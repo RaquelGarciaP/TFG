@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import time
 from SingleFileModifier import SingleFileModifier
 from KeplerianOrbit import KeplerianOrbit
+from Rassine import rassine
 
 start_time = time.time()
 
@@ -35,9 +36,15 @@ class SpectraCombiner:
 
         # create the data frame for the combined spectra (each column will contain the spectra for a concrete time)
         self.final_df = pd.DataFrame()
+        self.final_df['wave'] = self.__standard_wl['wl'].copy()
 
         # time evolution (self.final_df will be filled with the combined spectra for each time)
         self.__time_evolution()
+
+        # continuum normalization
+        # self.__continuum_normalization()
+
+        # final time
         end_time = time.time()
         print('FINAL TIME: ', end_time-start_time)
 
@@ -74,14 +81,14 @@ class SpectraCombiner:
             df1_i = sfm1.df['flux'].copy()
             df2_i = sfm2.df['flux'].copy()
 
-            # obtaining the dataframe corresponding to this time
+            # obtaining the dataframe corresponding to this time (combining both stars)
             df_i = self.__sum_spectra(df1_i, df2_i)
 
             # finally we add the dataframe for time_i to the general dataframe (each column will be a df
             # in a concrete time_i)
-            column_name_wl = 'wl_time_' + str(i)
+            # column_name_wl = 'wl_time_' + str(i)
             column_name_flux = 'flux_time_' + str(i)
-            self.final_df[column_name_wl] = df_i['wl']
+            # self.final_df[column_name_wl] = df_i['wl']
             self.final_df[column_name_flux] = df_i['flux']
 
     def __sum_spectra(self, df1_i, df2_i, integral_check=False, plot_check=False):
@@ -153,6 +160,29 @@ class SpectraCombiner:
             pass
 
         return df_i
+
+    def __continuum_normalization(self):
+        wave = self.__standard_wl['wl'].values
+        flux = self.final_df['flux_time_0'].values
+
+        output = rassine(wave, flux)
+        continuum = output['output']['continuum_linear']
+
+        fig, ax = plt.subplots()
+
+        l1, = ax.plot(wave, flux)
+        l3, = ax.plot(wave, continuum)
+
+        ax.legend((l1, l3), ('flux', 'continuum linear'), loc='upper right', shadow=False)
+        ax.set_xlabel('Wavelength (A)')
+        ax.set_ylabel('Flux')
+        ax.set_title('Continuum Fitting')
+        ax.grid(True)
+        plt.show()
+
+        for i in range(self.__num_t):
+            column_name_flux = 'flux_time_' + str(i)
+            self.final_df[column_name_flux] = self.final_df[column_name_flux].div(continuum)
 
     def plot(self):
         print('Generating combined spectra plot')

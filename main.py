@@ -21,7 +21,7 @@ test.save_to_file()'''
 standard_wl = pd.read_csv('./NewLibrary/standard_wl')
 
 # number of steps in t array (= measures over time)
-num_t = 100
+num_t = 1
 
 # *** general parameters of the stars ***
 T1, T2 = 11854.26, 11567.39
@@ -50,7 +50,7 @@ orbital_params = period, K1, K2, ecc, omega1, omega2, t_peri
 # t_peri: time of periastron_passage
 
 test = SpectraCombiner(standard_wl, general_params, orbital_params, num_t)
-# test.save_to_file('./CombinedSpectra/', 'test_file')
+test.save_to_file('./CombinedSpectra/', 'not_normalized_spectra')
 
 
 
