@@ -172,7 +172,7 @@ def rassine(input_wave, input_flux):
     cut_extension = len(filename.split('.')[-1]) + 1
     new_file = filename[:-cut_extension]
 
-    random_number = np.sum([ord(a) for a in filename.split('RASSINE_')[-1]])
+    random_number = int(100000*np.random.rand(1))  # np.sum([ord(a) for a in filename.split('RASSINE_')[-1]])
 
     #to ignite the variable present after preprocessing
 

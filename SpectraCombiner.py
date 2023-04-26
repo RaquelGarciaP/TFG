@@ -42,7 +42,7 @@ class SpectraCombiner:
         self.__time_evolution()
 
         # continuum normalization
-        # self.__continuum_normalization()
+        self.__continuum_normalization()
 
         # final time
         end_time = time.time()
