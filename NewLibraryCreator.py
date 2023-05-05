@@ -68,8 +68,6 @@ class NewLibraryCreator:
 
             for i in range(len(self.__initial_df)):
                 integral_i += self.__delta_wl_phoenix * initial_data.iloc[i]
-
-            for i in range(len(self.__initial_df)):
                 integral_f += self.__delta_wl_phoenix * self.__initial_df['flux'].iloc[i]
 
             diff = abs(integral_i - integral_f)

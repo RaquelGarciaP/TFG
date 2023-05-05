@@ -1,4 +1,5 @@
 import pandas as pd
+from astropy.io import fits
 from SpectraCombiner import SpectraCombiner
 # from NewLibraryCreator import NewLibraryCreator as newlib
 # from SpectraTimeEvolver import SpectraTimeEvolver
@@ -20,11 +21,14 @@ test.save_to_file()'''
 # read the standard wavelength file (with CARMENES sampling)
 standard_wl = pd.read_csv('./NewLibrary/standard_wl')
 
+# read the CARMENES file (will be used to save the final flux as a fits file in a format that SERVAL can use)
+CARMENES_file = fits.open('car-20160520T03h10m13s-sci-gtoc-vis_A.fits')
+
 # number of steps in t array (= measures over time)
-num_t = 1
+num_t = 3
 
 # *** general parameters of the stars ***
-T1, T2 = 11854.26, 11567.39
+T1, T2 = 2369.33, 2387.25  # 11854.26, 11567.39
 R21 = 2.67
 v_rot1, v_rot2 = 2997.23, 3100.39
 
@@ -49,9 +53,8 @@ orbital_params = period, K1, K2, ecc, omega1, omega2, t_peri
 # omega: angle of periastron
 # t_peri: time of periastron_passage
 
-test = SpectraCombiner(standard_wl, general_params, orbital_params, num_t)
-test.save_to_file('./CombinedSpectra/', 'not_normalized_spectra')
+test = SpectraCombiner(general_params, orbital_params, num_t, standard_wl, CARMENES_file)
 
-
-
+# close the CARMENES fits file
+CARMENES_file.close()
 

@@ -38,7 +38,7 @@ float_precision = 'float32' # float precision for the output products wavelength
 
 #general initial parameters
 
-par_stretching = 'auto_0.5'     # stretch the x and y axes ratio ('auto' available)                            <--- PARAMETER 1
+par_stretching = 5.0  # 'auto_0.5'     # stretch the x and y axes ratio ('auto' available)                            <--- PARAMETER 1
 par_vicinity = 7                # half-window to find a local maxima                                           
                                 
 par_smoothing_box = 6 # 6  # half-window of the box used to smooth (1 => no smoothing, 'auto' available)  <--- PARAMETER 2
@@ -52,7 +52,7 @@ mask_telluric = [[6275,6330],   # a list of left and right borders to eliminate 
                  [6470,6577],   # only if CCF = 'master' and par_fwhm = 'auto'
                  [6866,8000]] 
 
-par_R = 'auto'             # minimum radius of the rolling pin in angstrom ('auto' available)                  <--- PARAMETER 4
+par_R = 15.0  # 'auto'             # minimum radius of the rolling pin in angstrom ('auto' available)                  <--- PARAMETER 4
 par_Rmax = 'auto'          # maximum radius of the rolling pin in angstrom ('auto' available)                  <--- PARAMETER 5
 par_reg_nu = 'poly_1.0'    # penality-radius law                                                               <--- PARAMETER 6
                            # poly_d (d the degree of the polynome x**d)
@@ -67,7 +67,7 @@ interpolation = 'cubic' # define the interpolation for the continuum displayed i
                         # note that at the end a cubic and linear interpolation are saved in 'output' regardless this value
 
 feedback = False        # run the code without graphical feedback and interactions with the sphinx (only wishable if lot of spectra)
-only_print_end = False  # only print in the console the confirmation of RASSINE ending
+only_print_end = True  # only print in the console the confirmation of RASSINE ending
 plot_end = True        # display the final product in the graphic
 save_last_plot = False  # save the last graphical output (final output)
 

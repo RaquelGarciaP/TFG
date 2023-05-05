@@ -54,8 +54,8 @@ class SingleFileModifier:
             t1 = int(floor * 100)
             t2 = int(ceil * 100)
 
-        file_name_t1 = 'file_' + str(t1)
-        file_name_t2 = 'file_' + str(t2)
+        file_name_t1 = 'file_' + str(t1) + '.csv'
+        file_name_t2 = 'file_' + str(t2) + '.csv'
 
         # we read the corresponding files
         df_t1 = pd.read_csv('./NewLibrary/' + file_name_t1)
@@ -74,14 +74,10 @@ class SingleFileModifier:
             integral_2 = 0.0
             integral_f = 0.0
 
-            for i in range(len(df_t1)):
-                integral_1 += self.__standard_wl['wl'].iloc[i] * df_t1['flux'].iloc[i]
-
-            for i in range(len(df_t2)):
-                integral_2 += self.__standard_wl['wl'].iloc[i] * df_t2['flux'].iloc[i]
-
             for i in range(len(self.df)):
-                integral_f += self.__standard_wl['wl'].iloc[i] * self.df['flux'].iloc[i]
+                integral_1 += self.__standard_wl['delta wl'].iloc[i] * df_t1['flux'].iloc[i]
+                integral_2 += self.__standard_wl['delta wl'].iloc[i] * df_t2['flux'].iloc[i]
+                integral_f += self.__standard_wl['delta wl'].iloc[i] * self.df['flux'].iloc[i]
 
             interpol_integral_flux = integral_1 + (integral_2 - integral_1) * interpolator
             diff = abs(interpol_integral_flux - integral_f)
@@ -137,8 +133,6 @@ class SingleFileModifier:
 
             for i in range(len(self.df)):
                 integral_i += self.__standard_wl['delta wl'].iloc[i] * initial_data['flux'].iloc[i]
-
-            for i in range(len(self.df)):
                 integral_f += self.__standard_wl['delta wl'].iloc[i] * self.df['flux'].iloc[i]
 
             diff = abs(integral_i - integral_f)
@@ -207,8 +201,6 @@ class SingleFileModifier:
 
             for i in range(len(self.df)):
                 integral_i += self.__standard_wl['delta wl'].iloc[i] * initial_data['flux'].iloc[i]
-
-            for i in range(len(self.df)):
                 integral_f += self.__standard_wl['delta wl'].iloc[i] * self.df['flux'].iloc[i]
 
             diff = abs(integral_i - integral_f)
