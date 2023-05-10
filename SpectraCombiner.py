@@ -13,13 +13,19 @@ start_time = time.time()
 
 class SpectraCombiner:
 
-    def __init__(self, general_params, orbital_params, num_t, standard_wl, CARMENES_file):
+    def __init__(self, general_params, orbital_params, t_array, standard_wl, CARMENES_file):
 
         # save the standard wavelength df (it is an input, so we only read the file one time -in main-)
         self.__standard_wl = standard_wl
 
         # save the CARMENES file (will be used to save the final flux as a fits file in a format that SERVAL can use)
         self.__CARMENES_file = CARMENES_file
+
+        # time array (times when we have CARMENES measurements)
+        self.__t_array = t_array
+
+        # number of steps in t array
+        self.__num_t = len(t_array)
 
         # general parameters of the stars
         self.__T1, self.__T2, self.__R21, self.__v_rot1, self.__v_rot2 = general_params
@@ -35,9 +41,6 @@ class SpectraCombiner:
         # omega: angle of periastron
         # t_peri: time of periastron_passage
 
-        # number of steps in t array
-        self.__num_t = num_t
-
         # create the data frame for the combined spectra (each column will contain the spectra for a concrete time)
         self.final_df = pd.DataFrame()
         # self.final_df['wave'] = self.__standard_wl['wl'].copy()
@@ -46,7 +49,7 @@ class SpectraCombiner:
         self.__time_evolution()
 
         # continuum normalization
-        self.__continuum_normalization()
+        self.__continuum_normalization(plot_continuum=True, plot_normalization=True)
 
         # save the spectra in a fits file with the CARMENES
         self.__save_to_file()
@@ -60,11 +63,11 @@ class SpectraCombiner:
         # time array creation
         # the time array goes from t=0 to t=period -> we have a full orbital cycle
         # (both stars have the same orbital period)
-        t = np.linspace(0.0, self.__period, self.__num_t)
+        # t = np.linspace(0.0, self.__period, self.__num_t)
 
         # initialize keplerian orbit (both stars follow the same orbit, and depending on their mass, i.e., K, and omega,
         # we obtain a different radial velocity)
-        orbit = KeplerianOrbit(t, self.__period, self.__ecc, self.__t_peri)
+        orbit = KeplerianOrbit(self.__t_array, self.__period, self.__ecc, self.__t_peri)
 
         # radial velocity array for each star
         rv1 = orbit.keplerian_orbit(self.__K1, self.__omega1)
@@ -222,7 +225,10 @@ class SpectraCombiner:
         directory = 'params'  # directory name
         parent_dir = './CombinedSpectra/'  # parent directory path
         path = os.path.join(parent_dir, directory)  # path
-        # os.mkdir(path)  # create the directory
+        os.mkdir(path)  # create the directory
+
+        # load the file containing the names that each file must have
+        loaded_names = np.load('./NewLibrary/file_names.npy')
 
         # time loop
         for i in range(self.__num_t):
@@ -237,9 +243,9 @@ class SpectraCombiner:
                 # we interpolate to the CARMENES grid and rewrite the original flux for our own in the CARMENES file
                 self.__CARMENES_file['SPEC'].data[j+initial_order] = f(self.__CARMENES_file['WAVE'].data[j+initial_order])
 
-            file_name = 'file_time_' + str(i) + '.fits'
-            file_path = './CombinedSpectra/params/' + file_name
-            # self.__CARMENES_file.writeto(file_path, output_verify='silentfix')
+            file_name = loaded_names[i]
+            file_path = './CombinedSpectra/' + directory + '/' + file_name
+            self.__CARMENES_file.writeto(file_path, output_verify='silentfix')
 
             # self.__CARMENES_file.info()
             # print(self.__CARMENES_file['SPEC'].data[0])
@@ -274,7 +280,7 @@ class SpectraCombiner:
                     print('he entrat aqui!!')
                     delta_wl[i] = delta_wl[i - 1]
                 else:
-                    delta_wl[i] = self.__CARMENES_file['SPEC'].data[order][i + 1] - self.__CARMENES_file['SPEC'].data[order][i]
+                    delta_wl[i] = abs(self.__CARMENES_file['SPEC'].data[order][i + 1] - self.__CARMENES_file['SPEC'].data[order][i])
 
                 integral_carmenes += delta_wl[i] * self.__CARMENES_file['SPEC'].data[order][i]
 

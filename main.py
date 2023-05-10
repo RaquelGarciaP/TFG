@@ -1,9 +1,8 @@
+import numpy as np
 import pandas as pd
 from astropy.io import fits
 from SpectraCombiner import SpectraCombiner
 # from NewLibraryCreator import NewLibraryCreator as newlib
-# from SpectraTimeEvolver import SpectraTimeEvolver
-# from SingleFileModifier import SingleFileModifier
 
 
 '''
@@ -11,26 +10,26 @@ Per convertir els arxius .dat  a .csv: obrim amb un bloc de notes >> Edición >>
 '''
 
 
-'''test = newlib('lte02400-5.00-0.0.PHOENIX-ACES-AGSS-COND-2011-HiRes2.csv', 2400)
+'''test = newlib('lte02900-5.00-0.0.PHOENIX-ACES-AGSS-COND-2011-HiRes2.csv', 2900)
 test.range_filter(5199.9, 9600.1)
-test.instrumental_convolution(integral_check=True, plot_check=True)
-test.rebinning(integral_check=True, plot_check=True)
+test.instrumental_convolution(integral_check=True)
+test.rebinning(integral_check=True)
 test.save_to_file()'''
 
 
 # read the standard wavelength file (with CARMENES sampling)
-standard_wl = pd.read_csv('./NewLibrary/standard_wl')
+standard_wl = pd.read_csv('./NewLibrary/standard_wl.csv')
 
 # read the CARMENES file (will be used to save the final flux as a fits file in a format that SERVAL can use)
-CARMENES_file = fits.open('car-20160520T03h10m13s-sci-gtoc-vis_A.fits')
+CARMENES_file = fits.open('./NewLibrary/car-20160520T03h10m13s-sci-gtoc-vis_A.fits')
 
-# number of steps in t array (= measures over time)
-num_t = 3
+# read the file containing the dates when we have CARMENES measurements (time array)
+t_array = np.load('./NewLibrary/CARMENESdates.npy')
 
 # *** general parameters of the stars ***
-T1, T2 = 2369.33, 2387.25  # 11854.26, 11567.39
-R21 = 2.67
-v_rot1, v_rot2 = 2997.23, 3100.39
+T1, T2 = 2801.0, 2701.0  # 11854.26, 11567.39
+R21 = 0.854005047
+v_rot1, v_rot2 = 3000.0, 2900.0
 
 general_params = T1, T2, R21, v_rot1, v_rot2
 # T: temperature of the star
@@ -38,12 +37,12 @@ general_params = T1, T2, R21, v_rot1, v_rot2
 # v_rot: rotational velocity
 
 # *** orbital parameters of the stars ***
-period = 1728000.0  # seconds
-K1, K2 = 147980.06, 156760.43
+period = 15768000.0  # seconds
+K1, K2 = 4543.933874, 5302.624869
 ecc = 0.0
-omega1 = 52.34
+omega1 = 0.0
 omega2 = omega1 + 180.0
-t_peri = 3.54
+t_peri = 0.0
 
 orbital_params = period, K1, K2, ecc, omega1, omega2, t_peri
 # ####orbital_params2 = period, K2, ecc, omega2, t_peri
@@ -53,7 +52,7 @@ orbital_params = period, K1, K2, ecc, omega1, omega2, t_peri
 # omega: angle of periastron
 # t_peri: time of periastron_passage
 
-test = SpectraCombiner(general_params, orbital_params, num_t, standard_wl, CARMENES_file)
+test = SpectraCombiner(general_params, orbital_params, t_array, standard_wl, CARMENES_file)
 
 # close the CARMENES fits file
 CARMENES_file.close()

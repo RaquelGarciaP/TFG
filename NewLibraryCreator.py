@@ -120,7 +120,7 @@ class NewLibraryCreator:
         # todo: aquest càlcul funciona creant un np.array.empty amb la dimensió de standard_wl i sobreescribint cada
         #  flux[i] pel valor corresponent -> comprovar quin càlcul és més ràpid (probablement amb np)
         # create a collection that will contain the flux in the new standard wl (after rebinning)
-        flux = collections.deque()
+        flux = np.empty(len(self.__standard_wl))  # collections.deque()
 
         print('Calculating the flux in the new wl array')
         for i in range(len(self.__standard_wl)):
@@ -157,12 +157,12 @@ class NewLibraryCreator:
             # flux corresponding to each standard wl_i
             flux_i = sum_flux / delta_wli
             # add each flux to the created collection
-            flux.append(flux_i)
+            flux[i] = flux_i  # flux.append(flux_i)
 
         # convert the collection into a list
-        lst_final_flux = list(flux)
+        # lst_final_flux = list(flux)
         # add the flux into de final data frame (with CARMENES sampling) as a new column
-        self.__final_df['flux'] = lst_final_flux
+        self.__final_df['flux'] = flux  # lst_final_flux
 
         # check of the flux conservation (integral conservation)
         if integral_check:
@@ -206,6 +206,6 @@ class NewLibraryCreator:
     def save_to_file(self):
         print('Saving to file in the NewLibrary folder')
         # save the modified file to a csv in the folder 'NewLibrary'
-        self.__final_df.to_csv('./NewLibrary/file_' + str(self.__temperature), index=False)
+        self.__final_df.to_csv('./NewLibrary/file_' + str(self.__temperature) + '.csv', index=False)
 
 

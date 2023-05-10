@@ -8,12 +8,16 @@ import getopt
 import numpy as np
 
 
-hdul = fits.open('car-20160520T03h10m13s-sci-gtoc-vis_A.fits')
+hdul = fits.open('./CombinedSpectra/syntheticspectra_v1/file_time_51.fits')
 hdul.info()
+print(hdul[0].header)
 
-order = 53
+order = 44
 
-standard_wl = pd.read_csv('./NewLibrary/standard_wl')
+plt.plot(hdul['WAVE'].data[order], hdul['SPEC'].data[order])
+plt.show()
+
+'''standard_wl = pd.read_csv('./NewLibrary/standard_wl')
 mask = (standard_wl['wl'] >= hdul['WAVE'].data[order][0]) & (standard_wl['wl'] <= hdul['WAVE'].data[order][4095])
 standard_wl = standard_wl[mask]
 
@@ -23,7 +27,7 @@ print(standard_wl['wl'].to_numpy())
 
 print('\n')
 print(len(hdul['WAVE'].data[2]))
-print(len(standard_wl))
+print(len(standard_wl))'''
 
 hdul.close()
 
