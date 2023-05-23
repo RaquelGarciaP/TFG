@@ -24,8 +24,7 @@ class SingleFileModifier:
 
         # apply all the functions of the class
         self.__temperature_interpolator()
-        # self.__doppler_shift()
-        self.__doppler_broadening()
+        # self.__doppler_broadening()
 
     def __temperature_interpolator(self, integral_check=False, plot_check=False):
         # print('Interpolation of Temperatures')

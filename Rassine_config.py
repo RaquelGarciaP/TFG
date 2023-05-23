@@ -52,7 +52,7 @@ mask_telluric = [[6275,6330],   # a list of left and right borders to eliminate 
                  [6470,6577],   # only if CCF = 'master' and par_fwhm = 'auto'
                  [6866,8000]] 
 
-par_R = 20.0  # 'auto'             # minimum radius of the rolling pin in angstrom ('auto' available)                  <--- PARAMETER 4
+par_R = 10.0  # 'auto'             # minimum radius of the rolling pin in angstrom ('auto' available)                  <--- PARAMETER 4
 par_Rmax = 'auto'          # maximum radius of the rolling pin in angstrom ('auto' available)                  <--- PARAMETER 5
 par_reg_nu = 'poly_1.0'    # penality-radius law                                                               <--- PARAMETER 6
                            # poly_d (d the degree of the polynome x**d)

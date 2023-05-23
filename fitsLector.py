@@ -6,16 +6,44 @@ import pandas as pd
 import sys
 import getopt
 import numpy as np
+import os
 
 
-hdul = fits.open('./CombinedSpectra/syntheticspectra_v1/file_time_51.fits')
-hdul.info()
-print(hdul[0].header)
+hdul = fits.open('./CARMENES_data/car-20160520T03h10m13s-sci-gtoc-vis_A.fits')
+hdul2 = fits.open('./CombinedSpectra/params_R21_is_zero/car-20160520T03h10m13s-sci-gtoc-vis_A.fits')
+# hdul.info()
+# hdul2.info()
+# print(hdul[0].header['HIERARCH CARACAL BERV'])
+# print(hdul['SPEC'].data[11])
 
-order = 44
+order = 35
+
+'''plt.plot(hdul['WAVE'].data[order], hdul['SPEC'].data[order])
+plt.show()
 
 plt.plot(hdul['WAVE'].data[order], hdul['SPEC'].data[order])
+plt.show()'''
+
+fig, ax = plt.subplots()
+
+l1, = ax.plot(hdul['WAVE'].data[order], hdul['SPEC'].data[order])
+l3, = ax.plot(hdul2['WAVE'].data[order], hdul2['SPEC'].data[order]/50)
+
+ax.legend((l1, l3), ('carmenes', 'synthetic'), loc='upper right', shadow=False)
+ax.set_xlabel('Wavelength (A)')
+ax.set_ylabel('Flux')
+ax.set_title('carmenes vs synthetic')
+# ax.grid(True)
 plt.show()
+
+
+hdul.close()
+hdul2.close()
+
+# order = 44
+
+# plt.plot(hdul['WAVE'].data[order], hdul['SPEC'].data[order])
+# plt.show()
 
 '''standard_wl = pd.read_csv('./NewLibrary/standard_wl')
 mask = (standard_wl['wl'] >= hdul['WAVE'].data[order][0]) & (standard_wl['wl'] <= hdul['WAVE'].data[order][4095])
@@ -28,8 +56,6 @@ print(standard_wl['wl'].to_numpy())
 print('\n')
 print(len(hdul['WAVE'].data[2]))
 print(len(standard_wl))'''
-
-hdul.close()
 
 '''print('\n')
 CARMENES_data = fits.getdata('car-20160520T03h10m13s-sci-gtoc-vis_A.fits', header=True)

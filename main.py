@@ -20,16 +20,13 @@ test.save_to_file()'''
 # read the standard wavelength file (with CARMENES sampling)
 standard_wl = pd.read_csv('./NewLibrary/standard_wl.csv')
 
-# read the CARMENES file (will be used to save the final flux as a fits file in a format that SERVAL can use)
-CARMENES_file = fits.open('./NewLibrary/car-20160520T03h10m13s-sci-gtoc-vis_A.fits')
-
 # read the file containing the dates when we have CARMENES measurements (time array)
-t_array = np.load('./NewLibrary/CARMENESdates.npy')
+CARMENES_info = pd.read_csv('./CARMENES_data/info_observations.csv')
 
 # *** general parameters of the stars ***
-T1, T2 = 2801.0, 2701.0  # 11854.26, 11567.39
-R21 = 0.854005047
-v_rot1, v_rot2 = 3000.0, 2900.0
+T1, T2 = 2410.0, 2301.0  # K
+R21 = 0.0  # 0.923380142  # radius_2/radius_1
+v_rot1, v_rot2 = 50000.0, 45000.0  # m/s
 
 general_params = T1, T2, R21, v_rot1, v_rot2
 # T: temperature of the star
@@ -37,12 +34,12 @@ general_params = T1, T2, R21, v_rot1, v_rot2
 # v_rot: rotational velocity
 
 # *** orbital parameters of the stars ***
-period = 15768000.0  # seconds
-K1, K2 = 4543.933874, 5302.624869
+period = 182.5  # days
+K1, K2 = 8641.195059, 11300.02431  # m/s
 ecc = 0.0
-omega1 = 0.0
-omega2 = omega1 + 180.0
-t_peri = 0.0
+omega1 = 0.0  # degree
+omega2 = omega1 + 180.0  # degree
+t_peri = 400.0  # days (barycentric julian day - 2457000)
 
 orbital_params = period, K1, K2, ecc, omega1, omega2, t_peri
 # ####orbital_params2 = period, K2, ecc, omega2, t_peri
@@ -52,8 +49,4 @@ orbital_params = period, K1, K2, ecc, omega1, omega2, t_peri
 # omega: angle of periastron
 # t_peri: time of periastron_passage
 
-test = SpectraCombiner(general_params, orbital_params, t_array, standard_wl, CARMENES_file)
-
-# close the CARMENES fits file
-CARMENES_file.close()
-
+test = SpectraCombiner(general_params, orbital_params, CARMENES_info, standard_wl)
