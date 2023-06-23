@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import scipy as sp
 import math
+# from scipy.interpolate import CubicSpline
 import matplotlib.pyplot as plt
 
 
@@ -24,7 +25,7 @@ class SingleFileModifier:
 
         # apply all the functions of the class
         self.__temperature_interpolator()
-        # self.__doppler_broadening()
+        self.__doppler_broadening()
 
     def __temperature_interpolator(self, integral_check=False, plot_check=False):
         # print('Interpolation of Temperatures')
@@ -110,19 +111,21 @@ class SingleFileModifier:
         # print('Applying Doppler Shift')
         c = 299792458.0  # light velocity (m/s)
 
-        # we save the data before the Doppler shift (we only do this to do the check_plot)
-        initial_data = self.df.copy()
+        # we save the data before the Doppler shift (we only do this for the integral check)
+        df_copy = self.df.copy()
 
         # Doppler shift
-        self.df['wl'] = (1.0 + float(radial_vel) / c) * initial_data['wl']
+        df_copy['wl'] = (1.0 + float(radial_vel) / c) * df_copy['wl']
 
         # now we want to re-express the flux in the standardized wl
         # print('Re-Standardizing the wavelength after Doppler shift')
         # use numpy.interp() to obtain the interpolation of the flux with the standard wl -> the flux corresponding
         # to the standardized wl
-        self.df['flux'] = np.interp(self.__standard_wl['wl'], self.df['wl'], self.df['flux'])
+        #f = CubicSpline(self.df['wl'], self.df['flux'])
+        #self.df['flux'] = f(self.__standard_wl['wl'])
+        df_copy['flux'] = np.interp(self.__standard_wl['wl'], df_copy['wl'], df_copy['flux'])
         # set the wavelength to be equal to the standardized one (we can do that bc now the flux corresponds to that wl)
-        self.df['wl'] = self.__standard_wl['wl'].copy()
+        # df_copy['wl'] = self.__standard_wl['wl'].copy()
 
         # check of the flux conservation (integral conservation)
         if integral_check:
@@ -131,7 +134,7 @@ class SingleFileModifier:
             integral_f = 0.0
 
             for i in range(len(self.df)):
-                integral_i += self.__standard_wl['delta wl'].iloc[i] * initial_data['flux'].iloc[i]
+                integral_i += self.__standard_wl['delta wl'].iloc[i] * df_copy['flux'].iloc[i]
                 integral_f += self.__standard_wl['delta wl'].iloc[i] * self.df['flux'].iloc[i]
 
             diff = abs(integral_i - integral_f)
@@ -155,7 +158,7 @@ class SingleFileModifier:
             # plot (to check the data):
             fig, ax = plt.subplots()
 
-            l1, = ax.plot(self.__standard_wl['wl'], initial_data['flux'])
+            l1, = ax.plot(self.__standard_wl['wl'], df_copy['flux'])
             l2, = ax.plot(self.__standard_wl['wl'], self.df['flux'])
 
             ax.legend((l1, l2), ('Initial flux', 'Final flux'), loc='upper right', shadow=False)
@@ -167,6 +170,8 @@ class SingleFileModifier:
         # if plot == False: (correct way to express it -> if not plot:)
         else:
             pass
+
+        return df_copy['flux'].to_numpy()
 
     def __doppler_broadening(self, integral_check=False, plot_check=False):
         # print('Applying Doppler Broadening')

@@ -15,7 +15,7 @@ for i in range(len(FILENAME_arr)):
     file_path = './CARMENES_data/' + FILENAME_arr[i]
     hdul = fits.open(file_path)
     BJD_arr[i] = hdul[0].header['HIERARCH CARACAL BJD'] - 57000
-    BERV_arr[i] = hdul[0].header['HIERARCH CARACAL BERV'] * 1000  # passem a m/s
+    BERV_arr[i] = hdul[0].header['HIERARCH CARACAL BERV'] * 1000  # passem a m/s (originalment esta a km/s)
     hdul.close()
 
 

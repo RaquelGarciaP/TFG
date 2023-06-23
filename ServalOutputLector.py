@@ -17,27 +17,43 @@ print(df2[0])'''
 head = ['BJD', 'RVC', 'E_RVC', 'DRIFT', 'E_DRIFT', 'RV', 'E_RV', 'BERV', 'SADRIFT']
 
 # read files
-rv1 = np.load('./CombinedSpectra/rv1_noDoppler.npy')
-serval_output = pd.read_csv('./SERVAL/J18356+329_prova1_reduced3/J18356+329_prova1_reduced3.rvc.dat', names=head, delimiter=' ')
+rv1 = np.load('./CombinedSpectra/rv1_binary_v1.npy')
+rv2 = np.load('./CombinedSpectra/rv2_binary_v1.npy')
 
-mask = np.zeros(len(rv1), dtype=bool)
-# print(mask)
-mask[[34, 35, 36, 38, 39, 40, 41, 42, 44, 46, 48, 50, 51, 52, 53]] = True
-# print(mask)
-rv1_masked = rv1[mask, ...]
+serval_output = pd.read_csv('./SERVAL/J18356+329_binary_v1/J18356+329_binary_v1.rvc.dat', names=head, delimiter=' ')
+
+CARMENES_info = pd.read_csv('./CARMENES_data/info_observations.csv')
+t = CARMENES_info['BJD'].to_numpy()
+
+# final_rv = rv1 #- (rv1[0] - serval_output['RV'][0])
+total_rv = (rv1 + 0.796068465 * rv2) / (1 + 0.796068465)  # mean_rv = (k1 - L2/L1 * k2)/(1+ L2/L1)
+new_rv = total_rv - (total_rv[0] - serval_output['RV'][0])
+
 
 # calculate the difference between original RVs and SERVAL RV output
-difference_rv = abs(abs(rv1_masked)-abs(serval_output['RVC']))
-plt.plot(serval_output['BJD'], difference_rv)
+difference_rv = total_rv - serval_output['RV']
+
+difference_rv2 = []
+
+for i in range(len(t)):
+    difference_rv2.append(new_rv[i] - serval_output['RV'][i])
+
+print('max difference: ', np.max(np.absolute(difference_rv2)))
+print('max radial velocity value: ', np.max(np.absolute(new_rv)))
+
+plt.plot(t, difference_rv2)  # serval_output['BJD'], difference_rv)
 plt.show()
 
+'''new_rv = - rv1 - (-rv1[0] - serval_output['RV'][0])
+print(rv1)
+print(new_rv)'''
 
 fig, ax = plt.subplots()
 
-l1, = ax.plot(serval_output['BJD'], rv1_masked)
-l2, = ax.plot(serval_output['BJD'], serval_output['RVC'])
+l1, = ax.plot(t, new_rv)  # serval_output['BJD'], rv1)
+l2, = ax.plot(t, serval_output['RV'])  # serval_output['BJD'], serval_output['RV'])
 
-ax.legend((l1, l2), ('original', 'serval'), loc='upper right', shadow=False)
+ax.legend((l1, l2), ('original rv', 'serval'), loc='upper right', shadow=False)
 ax.set_xlabel('Time (BJD)')
 ax.set_ylabel('RV')
 ax.set_title('original RV vs serval RV')

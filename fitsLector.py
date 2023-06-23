@@ -9,14 +9,17 @@ import numpy as np
 import os
 
 
-hdul = fits.open('./CARMENES_data/car-20160520T03h10m13s-sci-gtoc-vis_A.fits')
-hdul2 = fits.open('./CombinedSpectra/params_R21_is_zero/car-20160520T03h10m13s-sci-gtoc-vis_A.fits')
-# hdul.info()
-# hdul2.info()
+hdul = fits.open('./CombinedSpectra/prova16_v3/car-20160520T03h10m13s-sci-gtoc-vis_A.fits')
+hdul2 = fits.open('./CombinedSpectra/prova16_v3/car-20220526T23h58m53s-sci-gtoc-vis_A.fits')
+hdul.info()
+hdul2.info()
 # print(hdul[0].header['HIERARCH CARACAL BERV'])
 # print(hdul['SPEC'].data[11])
 
-order = 35
+rv1 = np.load('./CombinedSpectra/rv1_ComprovarDoppler3.npy')
+print(rv1)
+
+order = 25
 
 '''plt.plot(hdul['WAVE'].data[order], hdul['SPEC'].data[order])
 plt.show()
@@ -27,12 +30,12 @@ plt.show()'''
 fig, ax = plt.subplots()
 
 l1, = ax.plot(hdul['WAVE'].data[order], hdul['SPEC'].data[order])
-l3, = ax.plot(hdul2['WAVE'].data[order], hdul2['SPEC'].data[order]/50)
+l3, = ax.plot(hdul2['WAVE'].data[order], hdul2['SPEC'].data[order])
 
-ax.legend((l1, l3), ('carmenes', 'synthetic'), loc='upper right', shadow=False)
+ax.legend((l1, l3), ('1', '2'), loc='upper right', shadow=False)
 ax.set_xlabel('Wavelength (A)')
 ax.set_ylabel('Flux')
-ax.set_title('carmenes vs synthetic')
+ax.set_title('Doppler check')
 # ax.grid(True)
 plt.show()
 

@@ -22,10 +22,13 @@ class SpectraCombiner:
         # save the names of each CARMENES file we need to model
         self.__CARMENES_filenames = CARMENES_info['FILENAME']
 
-        # barycentric correction of each measure (different for ach CARMENES file)
+        # barycentric correction of each measure (different for ach CARMENES file) -> units: m/s
+        # angle = np.linspace(0.0, 2*np.pi, 35)
+        # self.__CARMENES_BarCor = 400 * np.sin(angle)  # CARMENES_info['BERV'].to_numpy()
         self.__CARMENES_BarCor = CARMENES_info['BERV'].to_numpy()
 
         # times when we have CARMENES measurements (in Barycentric Julian Days) -> units: days
+        # self.__t_array = np.linspace(0.0, 4.0, 35)  # CARMENES_info['BJD'].to_numpy()
         self.__t_array = CARMENES_info['BJD'].to_numpy()
 
         # number of steps in t array
@@ -53,10 +56,10 @@ class SpectraCombiner:
         self.__time_evolution()
 
         # continuum normalization
-        self.__continuum_normalization()  # plot_continuum=True, plot_normalization=True)
+        #self.__continuum_normalization()  # plot_continuum=True, plot_normalization=True)
 
         # save the spectra in a fits file with the CARMENES
-        self.__save_to_file()
+        #self.__save_to_file()
 
         # final time
         end_time = time.time()
@@ -72,24 +75,27 @@ class SpectraCombiner:
         # initialize keplerian orbit (both stars follow the same orbit, and depending on their mass, i.e., K, and omega,
         # we obtain a different radial velocity)
         orbit = KeplerianOrbit(self.__t_array, self.__period, self.__ecc, self.__t_peri)
+        # orbit = KeplerianOrbit(t, self.__period, self.__ecc, self.__t_peri)
 
         # radial velocity array for each star
-        rv1 = orbit.keplerian_orbit(self.__K1, self.__omega1) - self.__CARMENES_BarCor
-        rv2 = orbit.keplerian_orbit(self.__K2, self.__omega2) - self.__CARMENES_BarCor
+        rv1 = orbit.keplerian_orbit(self.__K1, self.__omega1) #- self.__CARMENES_BarCor
+        rv2 = orbit.keplerian_orbit(self.__K2, self.__omega2) #- self.__CARMENES_BarCor
 
         # SAVE RV1 TO A NUMPY FILE
-        # np.save('./CombinedSpectra/rv1_noDoppler', rv1)
+        np.save('./CombinedSpectra/rv1_binary_v1', rv1)
+        np.save('./CombinedSpectra/rv2_binary_v1', rv2)
 
-        '''fig, ax = plt.subplots()
+        # plot
+        fig, ax = plt.subplots()
 
-        l1, = ax.plot(self.__t_array, rv1, 'o')
+        l1, = ax.plot(self.__t_array, rv1)
         l2, = ax.plot(self.__t_array, rv2)
 
         ax.legend((l1, l2), ('rv1', 'rv2'), loc='upper right', shadow=False)
         ax.set_xlabel('BJD')
         ax.set_ylabel('RV')
         ax.set_title('Radial velocity check')
-        plt.show()'''
+        plt.show()
 
         # initialize class SingleFileModifier for each star
         sfm1 = SingleFileModifier(self.__standard_wl, self.__T1, self.__v_rot1)
@@ -101,18 +107,14 @@ class SpectraCombiner:
         # loop for time evolution: we calculate the Doppler shift for each radial vel of the array (and obtain a
         # combined dataframe for each time)
         for i in range(self.__num_t):
-            # Doppler shift calculus
-            sfm1.doppler_shift(rv1[i])
-            sfm2.doppler_shift(rv2[i])
+            # Doppler shift calculus (returns the shifted flux as a numpy array)
+            flux1_i = sfm1.doppler_shift(rv1[i])
+            flux2_i = sfm2.doppler_shift(rv2[i])
 
-            # save the flux of the dataframe corresponding to each star after the Doppler shift for time_i
-            flux1_i = sfm1.df['flux'].to_numpy()
-            flux2_i = sfm2.df['flux'].to_numpy()
-
-            # obtaining the dataframe corresponding to this time (combining both stars)
+            # obtaining the combined flux corresponding to this time (combining both stars)
             flux_i = self.__sum_spectra(flux1_i, flux2_i)
 
-            # finally we add the dataframe for time_i to the general dataframe (each column will be a df
+            # add the flux for time_i to the general dataframe as a new column (each column will be the flux
             # in a concrete time_i)
             column_name_flux = 'flux_time_' + str(i)
             self.final_df[column_name_flux] = flux_i
@@ -240,7 +242,7 @@ class SpectraCombiner:
         wave_phoenix = self.__standard_wl['wl'].to_numpy()
 
         # make new directory where the fits files will be saved
-        directory = 'prova1'  # directory name
+        directory = 'binary_v1'  # directory name +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         parent_dir = './CombinedSpectra/'  # parent directory path
         path = os.path.join(parent_dir, directory)  # path
         os.mkdir(path)  # create the directory
@@ -271,15 +273,17 @@ class SpectraCombiner:
                 CARMENES_file['SPEC'].data[j+initial_order] = f(CARMENES_file['WAVE'].data[j+initial_order])
 
                 # modify some parameters of the fits header
-                name = 'HIERARCH CARACAL FOX SNR ' + str(j+initial_order)
-                CARMENES_file[0].header[name] = 0.000001  # we set the SNR close to zero because we have synthetic data
+                # name = 'HIERARCH CARACAL FOX SNR ' + str(j+initial_order)
+                # CARMENES_file[0].header[name] = 10  # we set the SNR close to zero because we have synthetic data
+            CARMENES_file[0].header['HIERARCH CARACAL BERV'] = self.__CARMENES_BarCor[i]/1000.0  # ho passem a km/s
+            # CARMENES_file[0].header['HIERARCH CARACAL JD'] = self.__t_array[i]
 
             # ********************* PLOT CHECK *********************
             if i == self.__num_t-1:
                 df_copy = self.__standard_wl.copy()
 
-                '''file_path = './CombinedSpectra/params1/' + self.__CARMENES_filenames.iloc[0]  # we read the first file only to check
-                CARMENES_file = fits.open(file_path)'''
+                #file_path = './CombinedSpectra/params1/' + self.__CARMENES_filenames.iloc[0]  # we read the first file only to check
+                #CARMENES_file = fits.open(file_path)
 
                 # t_max = self.__num_t - 1  # maximum time
                 # column_name = 'flux_time_' + str(t_max)

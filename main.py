@@ -24,8 +24,8 @@ standard_wl = pd.read_csv('./NewLibrary/standard_wl.csv')
 CARMENES_info = pd.read_csv('./CARMENES_data/info_observations.csv')
 
 # *** general parameters of the stars ***
-T1, T2 = 2410.0, 2301.0  # K
-R21 = 0.0  # 0.923380142  # radius_2/radius_1
+T1, T2 = 2401.0, 2301.0  # K
+R21 = 0.971463064  # radius_2/radius_1
 v_rot1, v_rot2 = 50000.0, 45000.0  # m/s
 
 general_params = T1, T2, R21, v_rot1, v_rot2
@@ -35,11 +35,11 @@ general_params = T1, T2, R21, v_rot1, v_rot2
 
 # *** orbital parameters of the stars ***
 period = 182.5  # days
-K1, K2 = 8641.195059, 11300.02431  # m/s
+K1, K2 = 9550.715309, 10824.14402  # m/s
 ecc = 0.0
-omega1 = 0.0  # degree
+omega1 = 90.0  # degree
 omega2 = omega1 + 180.0  # degree
-t_peri = 400.0  # days (barycentric julian day - 2457000)
+t_peri = 0.0  # 400.0  # days (barycentric julian day - 2457000)
 
 orbital_params = period, K1, K2, ecc, omega1, omega2, t_peri
 # ####orbital_params2 = period, K2, ecc, omega2, t_peri

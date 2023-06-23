@@ -2,31 +2,32 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import imageio
+from astropy.io import fits
 
 
-file = pd.read_csv('./CombinedSpectra/test_file.csv')
+CARMENES_info = pd.read_csv('./CARMENES_data/info_observations.csv')
+CARMENES_filenames = CARMENES_info['FILENAME']
 
-'''column_name_wl = 'wl_time_2'
-column_name_flux = 'flux_time_2'
-file_i = pd.DataFrame()
-file_i['wl'] = file[column_name_wl].copy()
-file_i['flux'] = file[column_name_flux].copy()
-
-plt.plot(file_i['wl'], file_i['flux'])
-plt.show()'''
+order = 35  # we do the plot for a concrete order
 
 images = []
-for i in range(100):
-    # choose the columns of the file
-    column_name_wl = 'wl_time_' + str(i)
-    column_name_flux = 'flux_time_' + str(i)
+for i in range(len(CARMENES_filenames)):
+
+    # read the CARMENES file corresponding to the time_i
+    file_path = './CombinedSpectra/binary_v1/' + CARMENES_filenames.iloc[i]
+    CARMENES_file = fits.open(file_path)
+
+    # crete a data frame whose columns contain the flux and wavelength of the CARMENES file
     file_i = pd.DataFrame()
-    file_i['wl'] = file[column_name_wl].copy()
-    file_i['flux'] = file[column_name_flux].copy()
+    file_i['wl'] = CARMENES_file['WAVE'].data[order]
+    file_i['flux'] = CARMENES_file['SPEC'].data[order]
+
+    # close the file
+    CARMENES_file.close()
 
     # choose the rows with the mask
-    mask = (file_i['wl'] >= 6140) & (file_i['wl'] <= 6180)
-    file_i = file_i[mask]
+    #mask = (file_i['wl'] >= 8040) & (file_i['wl'] <= 8060)
+    #file_i = file_i[mask]
 
     # GIF:
     # Crear lista de imágenes a partir de los datos
@@ -39,4 +40,4 @@ for i in range(100):
     plt.close()
 
 # Guardar lista de imágenes en un archivo .gif
-imageio.mimsave('time_evolution.gif', images, fps=2)
+imageio.mimsave('./CombinedSpectra/time_evolution_synthetic_35.gif', images, fps=2)
