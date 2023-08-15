@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 
 # ************** OWN STANDARD WAVELENGTH **************
-'''
+
 # create the collection that will contain the wavelength array
 standard_wl = collections.deque()
 
@@ -37,44 +37,7 @@ list_delta = list(delta_wl)
 # create a dictionary with the data
 dic = {'wl': list_wl, 'delta wl': delta_wl}
 # convert the list to pandas data frame
-df = pd.DataFrame(dic)'''
-
-# ************** CARMENES WAVELENGTH **************
-
-hdul = fits.open('car-20160520T03h10m13s-sci-gtoc-vis_A.fits')
-
-initial_order = 2
-final_order = 54
-
-total_grid = hdul['WAVE'].data[initial_order]
-
-for i in range(final_order-2):
-    total_grid = np.concatenate([total_grid, hdul['WAVE'].data[i+initial_order+1]])
-    # print(i+initial_order+1)
-    # print(i)
-
-# print(total_grid)
-
-delta_wl = np.empty(len(total_grid))
-for i in range(len(total_grid)):
-    if i + 1 == len(total_grid):
-        print('he entrat aqui!!')
-        delta_wl[i] = delta_wl[i-1]
-    else:
-        delta_wl[i] = total_grid[i+1] - total_grid[i]
-    
-print(np.amin(delta_wl))
-
-# create a dictionary with the data
-dic = {'wl': total_grid, 'delta wl': delta_wl}
-# convert the list to pandas data frame
 df = pd.DataFrame(dic)
-
-# print(df)
-
-lin = np.linspace(1, 100000, num=len(total_grid))
-plt.plot(lin, dic['delta wl'], 'o')
-plt.show()
 
 # save to file
 # df.to_csv('./NewLibrary/standard_wl', index=False)

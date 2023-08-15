@@ -24,9 +24,9 @@ standard_wl = pd.read_csv('./NewLibrary/standard_wl.csv')
 CARMENES_info = pd.read_csv('./CARMENES_data/info_observations.csv')
 
 # *** general parameters of the stars ***
-T1, T2 = 2401.0, 2301.0  # K
-R21 = 0.971463064  # radius_2/radius_1
-v_rot1, v_rot2 = 50000.0, 45000.0  # m/s
+T1, T2 = 2800.0, 2300.0  # K
+R21 = 0.97  # radius_2/radius_1
+v_rot1, v_rot2 = 50000.0, 40000.0  # m/s
 
 general_params = T1, T2, R21, v_rot1, v_rot2
 # T: temperature of the star
@@ -34,12 +34,12 @@ general_params = T1, T2, R21, v_rot1, v_rot2
 # v_rot: rotational velocity
 
 # *** orbital parameters of the stars ***
-period = 182.5  # days
-K1, K2 = 9550.715309, 10824.14402  # m/s
+period = 182.536  # days
+K1, K2 = 1910.14, 2164.83  # m/s
 ecc = 0.0
 omega1 = 90.0  # degree
 omega2 = omega1 + 180.0  # degree
-t_peri = 0.0  # 400.0  # days (barycentric julian day - 2457000)
+t_peri = period * 0.4  # days (barycentric julian day - 2457000)
 
 orbital_params = period, K1, K2, ecc, omega1, omega2, t_peri
 # ####orbital_params2 = period, K2, ecc, omega2, t_peri
@@ -49,4 +49,7 @@ orbital_params = period, K1, K2, ecc, omega1, omega2, t_peri
 # omega: angle of periastron
 # t_peri: time of periastron_passage
 
-test = SpectraCombiner(general_params, orbital_params, CARMENES_info, standard_wl)
+# directory name where tha files containing the final data will be saved (inside folder 'CombinedSpectra')
+directory_name = 'directory_name'
+
+test = SpectraCombiner(general_params, orbital_params, CARMENES_info, standard_wl, directory_name)

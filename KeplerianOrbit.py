@@ -21,17 +21,11 @@ class KeplerianOrbit:
     def __init__(self, t, period, ecc, t_peri):
         self.__t = t
         self.__period = period
-        # self.__K = K
         self.__ecc = ecc
-        # self.__omega = omega
         self.__t_peri = t_peri
 
         # sin and cos of the true anomaly
         self.__sinf, self.__cosf = self.__true_anomaly(self.__t, self.__period, self.__ecc, self.__t_peri)
-
-        # calculation of the radial velocity array
-        # (there is no need to call any function of the class, when it's initialized does all the needed operations)
-        # self.rv = self.__keplerian_orbit(self.__t, self.__period, self.__K, self.__ecc, self.__omega, self.__t_peri)
 
     def keplerian_orbit(self, K, omega):
         #   Description:

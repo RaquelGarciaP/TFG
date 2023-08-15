@@ -14,7 +14,10 @@ start_time = time.time()
 
 class SpectraCombiner:
 
-    def __init__(self, general_params, orbital_params, CARMENES_info, standard_wl):
+    def __init__(self, general_params, orbital_params, CARMENES_info, standard_wl, directory_name):
+
+        # directory name where tha files containing the final data will be saved
+        self.__directory_name = directory_name
 
         # save the standard wavelength df (it is an input, so we only read the file one time -in main-)
         self.__standard_wl = standard_wl
@@ -23,12 +26,9 @@ class SpectraCombiner:
         self.__CARMENES_filenames = CARMENES_info['FILENAME']
 
         # barycentric correction of each measure (different for ach CARMENES file) -> units: m/s
-        # angle = np.linspace(0.0, 2*np.pi, 35)
-        # self.__CARMENES_BarCor = 400 * np.sin(angle)  # CARMENES_info['BERV'].to_numpy()
         self.__CARMENES_BarCor = CARMENES_info['BERV'].to_numpy()
 
         # times when we have CARMENES measurements (in Barycentric Julian Days) -> units: days
-        # self.__t_array = np.linspace(0.0, 4.0, 35)  # CARMENES_info['BJD'].to_numpy()
         self.__t_array = CARMENES_info['BJD'].to_numpy()
 
         # number of steps in t array
@@ -56,10 +56,10 @@ class SpectraCombiner:
         self.__time_evolution()
 
         # continuum normalization
-        #self.__continuum_normalization()  # plot_continuum=True, plot_normalization=True)
+        self.__continuum_normalization()  # plot_continuum=True, plot_normalization=True)
 
         # save the spectra in a fits file with the CARMENES
-        #self.__save_to_file()
+        self.__save_to_file()
 
         # final time
         end_time = time.time()
@@ -70,23 +70,21 @@ class SpectraCombiner:
         # time array creation
         # the time array goes from t=0 to t=period -> we have a full orbital cycle
         # (both stars have the same orbital period)
-        # t = np.linspace(0.0, self.__period, self.__num_t)
 
         # initialize keplerian orbit (both stars follow the same orbit, and depending on their mass, i.e., K, and omega,
         # we obtain a different radial velocity)
         orbit = KeplerianOrbit(self.__t_array, self.__period, self.__ecc, self.__t_peri)
-        # orbit = KeplerianOrbit(t, self.__period, self.__ecc, self.__t_peri)
 
         # radial velocity array for each star
-        rv1 = orbit.keplerian_orbit(self.__K1, self.__omega1) #- self.__CARMENES_BarCor
-        rv2 = orbit.keplerian_orbit(self.__K2, self.__omega2) #- self.__CARMENES_BarCor
+        rv1 = orbit.keplerian_orbit(self.__K1, self.__omega1) - self.__CARMENES_BarCor
+        rv2 = orbit.keplerian_orbit(self.__K2, self.__omega2) - self.__CARMENES_BarCor
 
-        # SAVE RV1 TO A NUMPY FILE
-        np.save('./CombinedSpectra/rv1_binary_v1', rv1)
-        np.save('./CombinedSpectra/rv2_binary_v1', rv2)
+        # SAVE RV TO A NUMPY FILE
+        # np.save('./CombinedSpectra/rv1_file', rv1)
+        # np.save('./CombinedSpectra/rv2_file', rv2)
 
         # plot
-        fig, ax = plt.subplots()
+        '''fig, ax = plt.subplots()
 
         l1, = ax.plot(self.__t_array, rv1)
         l2, = ax.plot(self.__t_array, rv2)
@@ -95,7 +93,7 @@ class SpectraCombiner:
         ax.set_xlabel('BJD')
         ax.set_ylabel('RV')
         ax.set_title('Radial velocity check')
-        plt.show()
+        plt.show()'''
 
         # initialize class SingleFileModifier for each star
         sfm1 = SingleFileModifier(self.__standard_wl, self.__T1, self.__v_rot1)
@@ -223,16 +221,7 @@ class SpectraCombiner:
         else:
             pass
 
-    def plot(self):
-        print('Generating combined spectra plot')
-
-        plt.plot(self.__standard_wl['wl'], self.final_df['flux_time_0'])  # todo: mirar com variar aixo amb el GIFcreator.py
-        plt.xlabel('Wavelength (A)')
-        plt.ylabel('Flux')
-        plt.title('Combined Spectra')
-        plt.show()
-
-    def __save_to_file(self, integral_check=False):
+    def __save_to_file(self):
         print('Saving to fits files')
         # save the modified file to a csv in the folder 'NewLibrary'
 
@@ -242,13 +231,10 @@ class SpectraCombiner:
         wave_phoenix = self.__standard_wl['wl'].to_numpy()
 
         # make new directory where the fits files will be saved
-        directory = 'binary_v1'  # directory name +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        directory = self.__directory_name
         parent_dir = './CombinedSpectra/'  # parent directory path
         path = os.path.join(parent_dir, directory)  # path
         os.mkdir(path)  # create the directory
-
-        # load the file containing the names that each file must have
-        # loaded_names = np.load('./NewLibrary/file_names.npy')
 
         # time loop
         for i in range(self.__num_t):
@@ -260,26 +246,16 @@ class SpectraCombiner:
             f = CubicSpline(wave_phoenix, flux_phoenix)
 
             file_path = './CARMENES_data/' + self.__CARMENES_filenames.iloc[i]
-            # print(file_path, type(file_path))
             CARMENES_file = fits.open(file_path)
-            # print(CARMENES_file['SPEC'].data[2])
-            # print(type(CARMENES_file['SPEC'].data[42]))
-            # CARMENES_file.info()
-            # CARMENES_file.close()
 
             # loop for each of the orders of the CARMENES fits file
             for j in range(final_order - 1):
                 # we interpolate to the CARMENES grid and rewrite the original flux for our own in the CARMENES file
                 CARMENES_file['SPEC'].data[j+initial_order] = f(CARMENES_file['WAVE'].data[j+initial_order])
 
-                # modify some parameters of the fits header
-                # name = 'HIERARCH CARACAL FOX SNR ' + str(j+initial_order)
-                # CARMENES_file[0].header[name] = 10  # we set the SNR close to zero because we have synthetic data
-            CARMENES_file[0].header['HIERARCH CARACAL BERV'] = self.__CARMENES_BarCor[i]/1000.0  # ho passem a km/s
-            # CARMENES_file[0].header['HIERARCH CARACAL JD'] = self.__t_array[i]
 
             # ********************* PLOT CHECK *********************
-            if i == self.__num_t-1:
+            '''if i == self.__num_t-1:
                 df_copy = self.__standard_wl.copy()
 
                 #file_path = './CombinedSpectra/params1/' + self.__CARMENES_filenames.iloc[0]  # we read the first file only to check
@@ -309,7 +285,7 @@ class SpectraCombiner:
                 plt.show()
 
             else:
-                pass
+                pass'''
 
             # ********************* END PLOT CHECK *********************
 
@@ -317,65 +293,6 @@ class SpectraCombiner:
             file_path = './CombinedSpectra/' + directory + '/' + file_name
             CARMENES_file.writeto(file_path, output_verify='silentfix')
             CARMENES_file.close()
-
-            # self.__CARMENES_file.info()
-            # print(self.__CARMENES_file['SPEC'].data[0])
-
-        if integral_check:
-            # we do the check in time i=max bc it is assumed that if the flux is conserved for one time, it is for all
-            df_copy = self.__standard_wl.copy()
-
-            '''file_path = './CombinedSpectra/params1/' + self.__CARMENES_filenames.iloc[0]  # we read the first file only to check
-            CARMENES_file = fits.open(file_path)'''
-
-            t_max = self.__num_t - 1  # maximum time
-            column_name = 'flux_time_' + str(t_max)
-            flux_phoenix_copy = self.final_df[column_name].to_numpy(copy=True)
-
-            df_copy['flux'] = flux_phoenix_copy
-
-            order = 42
-
-            mask = (df_copy['wl'] >= CARMENES_file['WAVE'].data[order][0]) & \
-                   (df_copy['wl'] <= CARMENES_file['WAVE'].data[order][4095])
-            df_with_mask = df_copy[mask]
-
-            integral_standard = 0.0
-            integral_carmenes = 0.0
-
-            # integral of the flux b4 the interpolation with the CARMENES grid
-            for i in range(len(df_with_mask)):
-                integral_standard += df_with_mask['delta wl'].iloc[i] * df_with_mask['flux'].iloc[i]
-
-            # integral of the flux after the interpolation with the CARMENES grid
-            delta_wl = np.empty(len(CARMENES_file['SPEC'].data[order]))
-            for i in range(len(CARMENES_file['SPEC'].data[order])):
-                if i + 1 == len(CARMENES_file['SPEC'].data[order]):
-                    print('he entrat aqui!!')
-                    delta_wl[i] = delta_wl[i - 1]
-                else:
-                    delta_wl[i] = abs(CARMENES_file['SPEC'].data[order][i + 1] - CARMENES_file['SPEC'].data[order][i])
-
-                integral_carmenes += delta_wl[i] * CARMENES_file['SPEC'].data[order][i]
-
-            diff = abs(integral_standard - integral_carmenes)
-            print(' Flux integral in standard grid: ', integral_standard)
-            print(' Flux integral in CARMENES grid: ', integral_carmenes)
-            print(' Difference: ', diff, '   Difference / initial flux: ', diff / integral_standard)
-
-            fig, ax = plt.subplots()
-
-            l1, = ax.plot(df_with_mask['wl'], df_with_mask['flux'])
-            l2, = ax.plot(CARMENES_file['WAVE'].data[order], CARMENES_file['SPEC'].data[order])
-
-            ax.legend((l1, l2), ('Initial flux', 'Final flux'), loc='upper right', shadow=False)
-            ax.set_xlabel('Wavelength (A)')
-            ax.set_ylabel('Flux')
-            ax.set_title('CARMENES resampling check')
-            plt.show()
-
-        else:
-            pass
 
         save_time = time.time()
         print('TIME AFTER SAVING ALL THE FILES : ', save_time - start_time)

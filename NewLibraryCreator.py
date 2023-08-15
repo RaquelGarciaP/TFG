@@ -117,8 +117,6 @@ class NewLibraryCreator:
         # create a new column in the initial data frame that contains the position of each wl
         self.__initial_df['pos'] = lst
 
-        # todo: aquest càlcul funciona creant un np.array.empty amb la dimensió de standard_wl i sobreescribint cada
-        #  flux[i] pel valor corresponent -> comprovar quin càlcul és més ràpid (probablement amb np)
         # create a collection that will contain the flux in the new standard wl (after rebinning)
         flux = np.empty(len(self.__standard_wl))  # collections.deque()
 
